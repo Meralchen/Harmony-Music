@@ -87,7 +87,7 @@ class GesturePlayer extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+                  filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 15, vertical: 10),

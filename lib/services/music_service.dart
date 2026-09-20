@@ -240,8 +240,7 @@ class MusicServices extends getx.GetxService {
 
     playlistId = validatePlaylistId(playlistId!);
     data['playlistId'] = playlistId;
-    final isPlaylist =
-        playlistId.startsWith('PL') || playlistId.startsWith('OLA');
+    
     if (shuffle) {
       data['params'] = "wAEB8gECKAE%3D";
     }
