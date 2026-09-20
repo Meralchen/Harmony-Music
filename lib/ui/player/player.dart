@@ -33,7 +33,7 @@ class Player extends StatelessWidget {
           boxShadow: const [],
           minHeight: settingsScreenController.playerUi.value == 0
               ? 65 + Get.mediaQuery.padding.bottom
-              : 0,
+              : 0.0,
           maxHeight: size.height,
           isDraggable: !GetPlatform.isDesktop,
           controller: GetPlatform.isDesktop

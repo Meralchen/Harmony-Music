@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:harmonymusic/ui/player/player_controller.dart';
-import 'package:widget_marquee/widget_marquee.dart';
+
 
 import 'image_widget.dart';
 import 'snackbar.dart';
@@ -115,17 +115,13 @@ class UpNextQueue extends StatelessWidget {
                           ),
                         ],
                       ),
-                      title: Marquee(
-                        delay: const Duration(milliseconds: 300),
-                        duration: const Duration(seconds: 5),
-                        id: "queue_$itemKeyString",
-                        child: Text(
-                          currentItem.title,
-                          maxLines: 1,
-                          style: Theme.of(homeScaffoldContext)
-                              .textTheme
-                              .titleMedium,
-                        ),
+                      title: Text(
+                        currentItem.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(homeScaffoldContext)
+                            .textTheme
+                            .titleMedium,
                       ),
                       subtitle: Text(
                         currentItem.artist ?? "",

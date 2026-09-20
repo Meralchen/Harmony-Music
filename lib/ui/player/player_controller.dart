@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter_lyric/lyric_ui/ui_netease.dart';
+import 'package:flutter_lyric/lyrics_reader.dart';
+import 'package:flutter_lyric/lyrics_reader_model.dart';
 import 'package:hive/hive.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
@@ -70,6 +72,9 @@ class PlayerController extends GetxController
       UINetease(highlight: true, defaultSize: 20, defaultExtSize: 12);
   RxMap<String, dynamic> lyrics =
       <String, dynamic>{"synced": "", "plainLyrics": ""}.obs;
+  /// Cached parsed lyrics model — rebuilt only when [lyrics]['synced'] changes.
+  /// Prevents LRC parsing from running on the main thread on every position tick.
+  final cachedLyricsModel = Rxn<LyricsReaderModel>();
   ScrollController scrollController = ScrollController();
   final GlobalKey<ScaffoldState> homeScaffoldkey = GlobalKey<ScaffoldState>();
 
@@ -273,10 +278,12 @@ class PlayerController extends GetxController
             .indexWhere((element) => element.id == currentSong.value!.id);
         await _checkFav();
         await _addToRP(currentSong.value!);
-        if (isRadioModeOn && (currentSong.value!.id == currentQueue.last.id)) {
+        if (isRadioModeOn && currentQueue.length > 1 &&
+            (currentSong.value!.id == currentQueue.last.id)) {
           await _addRadioContinuation(radioInitiatorItem!);
         }
         lyrics.value = {"synced": "", "plainLyrics": ""};
+        cachedLyricsModel.value = null;
         showLyricsflag.value = false;
         if (isDesktopLyricsDialogOpen) {
           Navigator.pop(Get.context!);
@@ -501,7 +508,7 @@ class PlayerController extends GetxController
   }
 
   Future<void> _addRadioContinuation(dynamic item) async {
-    final isSong = item.runtimeType.toString() == "MediaItem";
+    final isSong = item is MediaItem;
     final content = await _musicServices.getWatchPlaylist(
         videoId: isSong ? item.id : "",
         radio: true,
@@ -831,6 +838,13 @@ class PlayerController extends GetxController
                 currentSong.value!, progressBarStatus.value.total.inSeconds);
         if (lyricsR != null) {
           lyrics.value = lyricsR;
+          // Build and cache the parsed model now, once — not on every UI tick
+          cachedLyricsModel.value = lyricsR['synced'] != null &&
+                  (lyricsR['synced'] as String).isNotEmpty
+              ? LyricsModelBuilder.create()
+                  .bindLyricToMain(lyricsR['synced'].toString())
+                  .getModel()
+              : null;
           isLyricsLoading.value = false;
           return;
         }
@@ -840,11 +854,14 @@ class PlayerController extends GetxController
         if (relatedLyricsId != null) {
           final lyrics_ = await _musicServices.getLyrics(relatedLyricsId);
           lyrics.value = {"synced": "", "plainLyrics": lyrics_};
+          cachedLyricsModel.value = null;
         } else {
           lyrics.value = {"synced": "", "plainLyrics": "NA"};
+          cachedLyricsModel.value = null;
         }
       } catch (e) {
         lyrics.value = {"synced": "", "plainLyrics": "NA"};
+        cachedLyricsModel.value = null;
       }
       isLyricsLoading.value = false;
     }

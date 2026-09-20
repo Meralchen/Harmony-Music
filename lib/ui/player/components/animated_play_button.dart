@@ -20,7 +20,8 @@ class AnimatedPlayButton extends StatefulWidget {
 class _AnimatedPlayButtonState extends State<AnimatedPlayButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  
+  PlayButtonState? _lastButtonState;
+
   @override
   void initState() {
     super.initState();
@@ -36,6 +37,16 @@ class _AnimatedPlayButtonState extends State<AnimatedPlayButton>
     super.dispose();
   }
 
+  void _updateAnimation(PlayButtonState buttonState) {
+    if (buttonState == _lastButtonState) return;
+    _lastButtonState = buttonState;
+    if (buttonState == PlayButtonState.playing) {
+      _controller.forward();
+    } else if (buttonState != PlayButtonState.loading) {
+      _controller.reverse();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GetX<PlayerController>(builder: (controller) {
@@ -43,11 +54,10 @@ class _AnimatedPlayButtonState extends State<AnimatedPlayButton>
       final isPlaying = buttonState == PlayButtonState.playing;
       final isLoading = buttonState == PlayButtonState.loading;
 
-      if (isPlaying) {
-        _controller.forward();
-      } else if (!isLoading) {
-        _controller.reverse();
-      }
+      // Schedule animation update after the build phase completes
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _updateAnimation(buttonState);
+      });
 
       return IconButton(
         iconSize: widget.iconSize,

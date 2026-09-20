@@ -446,7 +446,11 @@ List<dynamic> parseWatchPlaylist(List<dynamic> results) {
 }
 
 Map<String, dynamic> parseWatchTrack(Map<String, dynamic> data) {
-  final songInfo = parseSongRuns(data['longBylineText']['runs']);
+  final runs = (data['longBylineText']?['runs'] ??
+      data['shortBylineText']?['runs'] ??
+      data['bylineText']?['runs'] ??
+      []) as List;
+  final songInfo = parseSongRuns(runs);
 
   final track = {
     'videoId': data['videoId'],
@@ -812,7 +816,10 @@ dynamic parseSearchResult(Map<String, dynamic> data,
   }
   if ((['song', 'video']).contains(resultType)) {
     searchResult['videoId'] = nav(data,
-        [...play_button, 'playNavigationEndpoint', 'watchEndpoint', 'videoId']);
+        [...play_button, 'playNavigationEndpoint', 'watchEndpoint', 'videoId']) ??
+        nav(data, ['playlistItemData', 'videoId']) ??
+        nav(data, ['navigationEndpoint', 'watchEndpoint', 'videoId']) ??
+        nav(data, ['onTap', 'watchEndpoint', 'videoId']);
     searchResult['videoType'] = videoType;
   }
 

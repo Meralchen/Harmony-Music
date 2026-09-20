@@ -230,14 +230,12 @@ class MusicServices extends getx.GetxService {
       data['videoId'] = videoId;
       playlistId ??= "RDAMVM$videoId";
 
-      if (!(radio || shuffle)) {
-        data['watchEndpointMusicSupportedConfigs'] = {
-          'watchEndpointMusicConfig': {
-            'hasPersistentPlaylistPanel': true,
-            'musicVideoType': "MUSIC_VIDEO_TYPE_ATV",
-          }
-        };
-      }
+      data['watchEndpointMusicSupportedConfigs'] = {
+        'watchEndpointMusicConfig': {
+          'hasPersistentPlaylistPanel': true,
+          'musicVideoType': "MUSIC_VIDEO_TYPE_ATV",
+        }
+      };
     }
 
     playlistId = validatePlaylistId(playlistId!);
@@ -246,9 +244,6 @@ class MusicServices extends getx.GetxService {
         playlistId.startsWith('PL') || playlistId.startsWith('OLA');
     if (shuffle) {
       data['params'] = "wAEB8gECKAE%3D";
-    }
-    if (radio) {
-      data['params'] = "wAEB";
     }
 
     final List<dynamic> tracks = [];
@@ -308,7 +303,7 @@ class MusicServices extends getx.GetxService {
       parseFunc(contents) => parseWatchPlaylist(contents);
       final x = await getContinuations(results, 'playlistPanelContinuation',
           limit - tracks.length, requestFunc, parseFunc,
-          ctokenPath: isPlaylist ? '' : 'Radio',
+          ctokenPath: '',
           isAdditionparamReturnReq: true,
           additionalParams_: additionalParamsNext);
       additionalParamsForNext = x[1];
@@ -694,8 +689,8 @@ class MusicServices extends getx.GetxService {
 
       if (filter == null) {
         for (var item in parsedItems) {
-          final itemType = item.runtimeType == MediaItem
-              ? (item.artist.split(",")[0]) + "s"
+          final itemType = item is MediaItem
+              ? "Songs"
               : "${item.runtimeType}s";
           if (searchResults.containsKey(itemType) &&
               (searchResults[itemType]).length < 3) {

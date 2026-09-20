@@ -18,6 +18,17 @@ class MediaItemBuilder {
       }
     }
 
+    Uri? artUri;
+    if (json["thumbnails"] != null &&
+        json["thumbnails"] is List &&
+        (json["thumbnails"] as List).isNotEmpty &&
+        json["thumbnails"][0] != null &&
+        json["thumbnails"][0]['url'] != null) {
+      try {
+        artUri = Uri.parse(Thumbnail(json["thumbnails"][0]['url']).high);
+      } catch (_) {}
+    }
+
     return MediaItem(
         id: json["videoId"],
         title: json["title"],
@@ -26,7 +37,7 @@ class MediaItemBuilder {
             : toDuration(json['length']),
         album: album != null ? album['name'] : null,
         artist: artistName,
-        artUri: Uri.parse(Thumbnail(json["thumbnails"][0]['url']).high),
+        artUri: artUri,
         extras: {
           'url': json['url'] ?? url,
           'length': json['length'],

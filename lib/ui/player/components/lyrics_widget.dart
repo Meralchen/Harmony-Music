@@ -41,29 +41,32 @@ class LyricsWidget extends StatelessWidget {
                     ),
                   ),
                 )
-              : IgnorePointer(
-                  child: LyricsReader(
-                    padding: const EdgeInsets.only(left: 5, right: 5),
-                    lyricUi: playerController.lyricUi,
-                    position: playerController
-                        .progressBarStatus.value.current.inMilliseconds,
-                    model: LyricsModelBuilder.create()
-                        .bindLyricToMain(
-                            playerController.lyrics['synced'].toString())
-                        .getModel(),
-                    emptyBuilder: () => Center(
-                      child: Text(
-                        "syncedLyricsNotAvailable".tr,
-                        style: playerController.isDesktopLyricsDialogOpen
+              : Obx(() {
+                  // Read position reactively, but use the pre-parsed cached model
+                  // to avoid re-parsing the entire LRC string on every tick.
+                  final position = playerController
+                      .progressBarStatus.value.current.inMilliseconds;
+                  final model = playerController.cachedLyricsModel.value;
+                  return IgnorePointer(
+                    child: LyricsReader(
+                      padding: const EdgeInsets.only(left: 5, right: 5),
+                      lyricUi: playerController.lyricUi,
+                      position: position,
+                      model: model,
+                      emptyBuilder: () => Center(
+                        child: Text(
+                          "syncedLyricsNotAvailable".tr,
+                          style: playerController.isDesktopLyricsDialogOpen
                               ? Theme.of(context).textTheme.titleMedium!
                               : Theme.of(context)
                                   .textTheme
                                   .titleMedium!
                                   .copyWith(color: Colors.white),
+                        ),
                       ),
                     ),
-                  ),
-                ),
+                  );
+                }),
     );
   }
 }
