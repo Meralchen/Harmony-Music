@@ -46,7 +46,7 @@ class LyricsWidget extends StatelessWidget {
                   // to avoid re-parsing the entire LRC string on every tick.
                   final position = playerController
                       .progressBarStatus.value.current.inMilliseconds;
-                  final model = playerController.cachedLyricsModel.value;
+                  final model = playerController.cachedLyricsModel;
                   return IgnorePointer(
                     child: LyricsReader(
                       padding: const EdgeInsets.only(left: 5, right: 5),

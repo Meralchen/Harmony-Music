@@ -816,10 +816,7 @@ dynamic parseSearchResult(Map<String, dynamic> data,
   }
   if ((['song', 'video']).contains(resultType)) {
     searchResult['videoId'] = nav(data,
-        [...play_button, 'playNavigationEndpoint', 'watchEndpoint', 'videoId']) ??
-        nav(data, ['playlistItemData', 'videoId']) ??
-        nav(data, ['navigationEndpoint', 'watchEndpoint', 'videoId']) ??
-        nav(data, ['onTap', 'watchEndpoint', 'videoId']);
+        [...play_button, 'playNavigationEndpoint', 'watchEndpoint', 'videoId']);
     searchResult['videoType'] = videoType;
   }
 

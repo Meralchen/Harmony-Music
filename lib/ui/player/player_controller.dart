@@ -74,7 +74,7 @@ class PlayerController extends GetxController
       <String, dynamic>{"synced": "", "plainLyrics": ""}.obs;
   /// Cached parsed lyrics model — rebuilt only when [lyrics]['synced'] changes.
   /// Prevents LRC parsing from running on the main thread on every position tick.
-  final cachedLyricsModel = Rxn<LyricsReaderModel>();
+  LyricsReaderModel? cachedLyricsModel;
   ScrollController scrollController = ScrollController();
   final GlobalKey<ScaffoldState> homeScaffoldkey = GlobalKey<ScaffoldState>();
 
@@ -283,7 +283,7 @@ class PlayerController extends GetxController
           await _addRadioContinuation(radioInitiatorItem!);
         }
         lyrics.value = {"synced": "", "plainLyrics": ""};
-        cachedLyricsModel.value = null;
+        cachedLyricsModel = null;
         showLyricsflag.value = false;
         if (isDesktopLyricsDialogOpen) {
           Navigator.pop(Get.context!);
@@ -839,7 +839,7 @@ class PlayerController extends GetxController
         if (lyricsR != null) {
           lyrics.value = lyricsR;
           // Build and cache the parsed model now, once — not on every UI tick
-          cachedLyricsModel.value = lyricsR['synced'] != null &&
+          cachedLyricsModel = lyricsR['synced'] != null &&
                   (lyricsR['synced'] as String).isNotEmpty
               ? LyricsModelBuilder.create()
                   .bindLyricToMain(lyricsR['synced'].toString())
@@ -854,14 +854,14 @@ class PlayerController extends GetxController
         if (relatedLyricsId != null) {
           final lyrics_ = await _musicServices.getLyrics(relatedLyricsId);
           lyrics.value = {"synced": "", "plainLyrics": lyrics_};
-          cachedLyricsModel.value = null;
+          cachedLyricsModel = null;
         } else {
           lyrics.value = {"synced": "", "plainLyrics": "NA"};
-          cachedLyricsModel.value = null;
+          cachedLyricsModel = null;
         }
       } catch (e) {
         lyrics.value = {"synced": "", "plainLyrics": "NA"};
-        cachedLyricsModel.value = null;
+        cachedLyricsModel = null;
       }
       isLyricsLoading.value = false;
     }
