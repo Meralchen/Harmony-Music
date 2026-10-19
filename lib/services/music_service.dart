@@ -241,7 +241,9 @@ class MusicServices extends getx.GetxService {
     playlistId = validatePlaylistId(playlistId!);
     data['playlistId'] = playlistId;
     
-    if (shuffle) {
+    if (radio) {
+      data['params'] = "wAEB";
+    } else if (shuffle) {
       data['params'] = "wAEB8gECKAE%3D";
     }
 
@@ -267,12 +269,22 @@ class MusicServices extends getx.GetxService {
         };
       }
 
-      final playlistPanelRenderer = nav(watchNextRenderer, [
+      dynamic playlistPanelRenderer = nav(watchNextRenderer, [
         ...tab_content,
         'musicQueueRenderer',
         'content',
         'playlistPanelRenderer'
       ]);
+      if (playlistPanelRenderer == null && watchNextRenderer?['tabs'] is List) {
+        for (var tab in watchNextRenderer['tabs']) {
+          final content = tab?['tabRenderer']?['content'];
+          if (content?['musicQueueRenderer'] != null) {
+            playlistPanelRenderer =
+                content['musicQueueRenderer']?['content']?['playlistPanelRenderer'];
+            if (playlistPanelRenderer != null) break;
+          }
+        }
+      }
       if (playlistPanelRenderer == null) {
         return {
           'tracks': tracks,
@@ -654,6 +666,11 @@ class MusicServices extends getx.GetxService {
           !searchResults.containsKey("Featured playlists")) {
         searchResults["Featured playlists"] = [];
       }
+
+      if ((searchResults['searchEndpoint']).containsKey("Videos") &&
+          !searchResults.containsKey("Videos")) {
+        searchResults["Videos"] = [];
+      }
     }
 
     /// End Search Chips
@@ -674,8 +691,13 @@ class MusicServices extends getx.GetxService {
 
       if (res['musicShelfRenderer'] != null) {
         itemResults = res['musicShelfRenderer']['contents'];
+        final shelfTitle = nav(res, ['musicShelfRenderer', ...title_text]);
         if (filter != null) {
-          category = nav(res, ['musicShelfRenderer', ...title_text]);
+          category = (shelfTitle != null && shelfTitle.toString().trim().isNotEmpty)
+              ? shelfTitle
+              : "${filter[0].toUpperCase()}${filter.substring(1)}";
+        } else if (shelfTitle != null && shelfTitle.toString().trim().isNotEmpty) {
+          category = shelfTitle;
         }
       } else if (res['itemSectionRenderer'] != null) {
         itemResults = res['itemSectionRenderer']['contents'];
@@ -688,9 +710,11 @@ class MusicServices extends getx.GetxService {
 
       if (filter == null) {
         for (var item in parsedItems) {
-          final itemType = item is MediaItem
-              ? "Songs"
-              : "${item.runtimeType}s";
+          final itemType = (item is MediaItem &&
+                  (item.extras?['resultType'] == 'video' ||
+                      category.toLowerCase().contains("video")))
+              ? "Videos"
+              : (item is MediaItem ? "Songs" : "${item.runtimeType}s");
           if (searchResults.containsKey(itemType) &&
               (searchResults[itemType]).length < 3) {
             (searchResults[itemType] as List).add(item);
@@ -700,6 +724,10 @@ class MusicServices extends getx.GetxService {
         }
       } else {
         searchResults[category] = parsedItems;
+        final filterKey = "${filter[0].toUpperCase()}${filter.substring(1)}";
+        if (!searchResults.containsKey(filterKey)) {
+          searchResults[filterKey] = parsedItems;
+        }
       }
       type = typeFilter?.substring(0, typeFilter.length - 1).toLowerCase();
 

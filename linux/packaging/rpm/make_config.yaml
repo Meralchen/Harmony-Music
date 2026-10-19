@@ -1,10 +1,10 @@
 icon: assets/icons/icon.png
 summary: An application to stream Music
 group: Application/Multimedia
-vendor: anandnet
-packager: anandnet
+vendor: NPP-exe
+packager: NPP-exe
 license: GPLv3
-url: https://github.com/anandnet/Harmony-Music
+url: https://github.com/NPP-exe/Harmony-Music
 
 requires:
   - mpv-libs

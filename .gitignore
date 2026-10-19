@@ -70,3 +70,10 @@ android/app/.cxx/Debug/*
 
 /android/app/.cxx
 
+# Keystore & Android signing
+key.properties
+**/android/key.properties
+*.jks
+*.keystore
+
+

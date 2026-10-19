@@ -261,6 +261,13 @@ class MyAudioHandler extends BaseAudioHandler with GetxServiceMixin {
   @override
   Future<void> updateQueue(List<MediaItem> queue) async {
     this.queue.add(List<MediaItem>.from(queue));
+    final currentMediaItem = mediaItem.value;
+    if (currentMediaItem != null) {
+      final newIdx = queue.indexWhere((item) => item.id == currentMediaItem.id);
+      if (newIdx != -1) {
+        currentIndex = newIdx;
+      }
+    }
   }
 
   @override

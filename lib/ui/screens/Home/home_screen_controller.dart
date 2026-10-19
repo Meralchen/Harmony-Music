@@ -267,12 +267,18 @@ class HomeScreenController extends GetxController {
     showVersionDialog.value =
         Hive.box("AppPrefs").get("newVersionVisibility") ?? true;
     if (showVersionDialog.isTrue) {
-      newVersionCheck(Get.find<SettingsScreenController>().currentVersion)
-          .then((value) {
-        if (value) {
-          showDialog(
-              context: Get.context!,
-              builder: (context) => const NewVersionDialog());
+      final settingsCon = Get.find<SettingsScreenController>();
+      newVersionCheckWithDetails(settingsCon.currentVersion).then((info) {
+        if (info.isAvailable) {
+          settingsCon.isNewVersionAvailable.value = true;
+          settingsCon.latestVersion.value = info.latestVersion;
+          settingsCon.releaseNotes.value = info.releaseNotes;
+          settingsCon.releaseUrl.value = info.releaseUrl;
+          if (Get.context != null) {
+            showDialog(
+                context: Get.context!,
+                builder: (context) => const NewVersionDialog());
+          }
         }
       });
     }

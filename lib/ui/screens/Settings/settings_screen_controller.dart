@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:harmonymusic/services/permission_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../../utils/app_constants.dart';
 import '../../../utils/update_check_flag_file.dart';
 import '/services/piped_service.dart';
 import '../Library/library_controller.dart';
@@ -47,14 +49,31 @@ class SettingsScreenController extends GetxController {
   final keepScreenAwake = false.obs;
   final restorePlaybackSession = false.obs;
   final cacheHomeScreenData = true.obs;
-  final currentVersion = "V1.12.2";
+  final _currentVersion = "v1.12.2".obs;
+  String get currentVersion => _currentVersion.value;
+  final latestVersion = "".obs;
+  final releaseNotes = "".obs;
+  final releaseUrl = appReleasesUrl.obs;
 
   @override
   void onInit() {
     _setInitValue();
-    if (updateCheckFlag) _checkNewVersion();
+    _initPackageInfo().then((_) {
+      if (updateCheckFlag) _checkNewVersion();
+    });
     _createInAppSongDownDir();
     super.onInit();
+  }
+
+  Future<void> _initPackageInfo() async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      if (packageInfo.version.isNotEmpty) {
+        _currentVersion.value = 'v${packageInfo.version}';
+      }
+    } catch (e) {
+      printINFO("Could not load PackageInfo: $e");
+    }
   }
 
   get currentVision => currentVersion;
@@ -62,10 +81,23 @@ class SettingsScreenController extends GetxController {
       "$_supportDir/Music" == downloadLocationPath.toString();
   String get supportDirPath => _supportDir;
 
-  _checkNewVersion() {
-    newVersionCheck(currentVersion)
-        .then((value) => isNewVersionAvailable.value = value);
+  Future<VersionUpdateInfo> _checkNewVersion() async {
+    try {
+      final info = await newVersionCheckWithDetails(currentVersion);
+      isNewVersionAvailable.value = info.isAvailable;
+      if (info.isAvailable) {
+        latestVersion.value = info.latestVersion;
+        releaseNotes.value = info.releaseNotes;
+        releaseUrl.value = info.releaseUrl;
+      }
+      return info;
+    } catch (e) {
+      printINFO("Error checking version: $e");
+      return const VersionUpdateInfo(isAvailable: false, latestVersion: '');
+    }
   }
+
+  Future<VersionUpdateInfo> manualCheckNewVersion() => _checkNewVersion();
 
   Future<String> _createInAppSongDownDir() async {
     _supportDir = (await getApplicationSupportDirectory()).path;

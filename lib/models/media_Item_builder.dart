@@ -17,6 +17,15 @@ class MediaItemBuilder {
         album = json['album'];
       }
     }
+    Uri? artUri;
+    try {
+      if (json["thumbnails"] != null &&
+          json["thumbnails"] is List &&
+          (json["thumbnails"] as List).isNotEmpty &&
+          json["thumbnails"][0]?['url'] != null) {
+        artUri = Uri.parse(Thumbnail(json["thumbnails"][0]['url']).high);
+      }
+    } catch (_) {}
 
     return MediaItem(
         id: json["videoId"],
@@ -26,7 +35,7 @@ class MediaItemBuilder {
             : toDuration(json['length']),
         album: album != null ? album['name'] : null,
         artist: artistName,
-        artUri: Uri.parse(Thumbnail(json["thumbnails"][0]['url']).high),
+        artUri: artUri,
         extras: {
           'url': json['url'] ?? url,
           'length': json['length'],
@@ -34,7 +43,8 @@ class MediaItemBuilder {
           'artists': json['artists'],
           'date': json['date'],
           'trackDetails': json['trackDetails'],
-          'year': json['year']
+          'year': json['year'],
+          'resultType': json['resultType'],
         });
   }
 
@@ -60,16 +70,19 @@ class MediaItemBuilder {
   static Map<String, dynamic> toJson(MediaItem mediaItem) => {
         "videoId": mediaItem.id,
         "title": mediaItem.title,
-        'album': mediaItem.extras!['album'],
-        'artists': mediaItem.extras!['artists'],
-        'length': mediaItem.extras!['length'],
+        'album': mediaItem.extras?['album'],
+        'artists': mediaItem.extras?['artists'],
+        'length': mediaItem.extras?['length'],
         'duration': mediaItem.duration?.inSeconds,
-        'date': mediaItem.extras!['date'],
-        'thumbnails': [
-          {'url': mediaItem.artUri.toString()}
-        ],
-        'url': mediaItem.extras!['url'],
+        'date': mediaItem.extras?['date'],
+        'thumbnails': mediaItem.artUri != null
+            ? [
+                {'url': mediaItem.artUri.toString()}
+              ]
+            : [],
+        'url': mediaItem.extras?['url'],
         'trackDetails': mediaItem.extras?['trackDetails'],
-        'year': mediaItem.extras?['year']
+        'year': mediaItem.extras?['year'],
+        'resultType': mediaItem.extras?['resultType'],
       };
 }

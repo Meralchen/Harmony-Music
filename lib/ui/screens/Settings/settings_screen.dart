@@ -4,10 +4,12 @@ import 'package:harmonymusic/utils/helper.dart';
 import 'package:harmonymusic/utils/lang_mapping.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../utils/app_constants.dart';
 import '../../widgets/common_dialog_widget.dart';
 import '../../widgets/cust_switch.dart';
 import '../../widgets/export_file_dialog.dart';
 import '../../widgets/backup_dialog.dart';
+import '../../widgets/new_version_dialog.dart';
 import '../../widgets/restore_dialog.dart';
 import '../Library/library_controller.dart';
 import '../../widgets/snackbar.dart';
@@ -55,10 +57,12 @@ class SettingsScreen extends StatelessWidget {
                           type: MaterialType.transparency,
                           child: ListTile(
                             onTap: () {
+                              final url = settingsController
+                                      .releaseUrl.value.isNotEmpty
+                                  ? settingsController.releaseUrl.value
+                                  : appReleasesUrl;
                               launchUrl(
-                                Uri.parse(
-                                  'https://github.com/anandnet/Harmony-Music/releases/latest',
-                                ),
+                                Uri.parse(url),
                                 mode: LaunchMode.externalApplication,
                               );
                             },
@@ -69,7 +73,12 @@ class SettingsScreen extends StatelessWidget {
                                 const EdgeInsets.only(left: 8, right: 10),
                             leading:
                                 const CircleAvatar(child: Icon(Icons.download)),
-                            title: Text("newVersionAvailable".tr),
+                            title: Text(
+                              settingsController
+                                      .latestVersion.value.isNotEmpty
+                                  ? "${"newVersionAvailable".tr} (${settingsController.latestVersion.value})"
+                                  : "newVersionAvailable".tr,
+                            ),
                             visualDensity: const VisualDensity(horizontal: -2),
                             subtitle: Text(
                               "goToDownloadPage".tr,
@@ -661,18 +670,53 @@ class SettingsScreen extends StatelessWidget {
                   ListTile(
                     contentPadding: const EdgeInsets.only(left: 5, right: 10),
                     title: Text("github".tr),
-                    subtitle: Text(
-                      "${"githubDes".tr}${((Get.find<PlayerController>().playerPanelMinHeight.value) == 0 || !isBottomNavActive) ? "" : "\n\n${settingsController.currentVersion} ${"by".tr} anandnet"}",
-                      style: Theme.of(context).textTheme.bodyMedium,
+                    subtitle: Obx(
+                      () => Text(
+                        "${"githubDes".tr}\n$appGithubUrl${((Get.find<PlayerController>().playerPanelMinHeight.value) == 0 || !isBottomNavActive) ? "" : "\n\n${settingsController.currentVersion} ${"by".tr} $appGithubUser"}",
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
                     ),
                     isThreeLine: true,
                     onTap: () {
                       launchUrl(
-                        Uri.parse(
-                          'https://github.com/anandnet/Harmony-Music',
-                        ),
+                        Uri.parse(appGithubUrl),
                         mode: LaunchMode.externalApplication,
                       );
+                    },
+                  ),
+                  ListTile(
+                    contentPadding: const EdgeInsets.only(left: 5, right: 10),
+                    title: const Text("Check for Updates"),
+                    subtitle: Obx(
+                      () => Text(
+                        settingsController.isNewVersionAvailable.value
+                            ? "New version ${settingsController.latestVersion.value} is available!"
+                            : "Harmony Music is up to date (${settingsController.currentVersion})",
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                    trailing: const Icon(Icons.system_update_alt),
+                    onTap: () async {
+                      final info =
+                          await settingsController.manualCheckNewVersion();
+                      if (info.isAvailable) {
+                        if (context.mounted) {
+                          showDialog(
+                            context: context,
+                            builder: (context) => const NewVersionDialog(),
+                          );
+                        }
+                      } else {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            snackbar(
+                              context,
+                              "You are on the latest version (${settingsController.currentVersion})",
+                              size: SanckBarSize.MEDIUM,
+                            ),
+                          );
+                        }
+                      }
                     },
                   ),
                   const Divider(),
@@ -683,8 +727,19 @@ class SettingsScreen extends StatelessWidget {
                           "Harmony Music",
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
-                        Text(settingsController.currentVersion,
-                            style: Theme.of(context).textTheme.titleMedium)
+                        Obx(
+                          () => Text(
+                            settingsController.currentVersion,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4.0),
+                          child: Text(
+                            "Maintained by $appGithubUser • Forked from $appOriginalAuthor",
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -694,9 +749,11 @@ class SettingsScreen extends StatelessWidget {
           )),
           Padding(
             padding: const EdgeInsets.only(bottom: 20.0),
-            child: Text(
-              "${settingsController.currentVersion} ${"by".tr} anandnet",
-              style: Theme.of(context).textTheme.bodySmall,
+            child: Obx(
+              () => Text(
+                "${settingsController.currentVersion} ${"by".tr} $appGithubUser",
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             ),
           ),
         ],

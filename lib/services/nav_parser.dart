@@ -463,12 +463,17 @@ Map<String, dynamic> parseWatchTrack(Map<String, dynamic> data) {
   return track;
 }
 
-String? getTabBrowseId(Map<String, dynamic> watchNextRenderer, int tabId) {
-  if (!watchNextRenderer['tabs'][tabId]['tabRenderer']
-      .containsKey('unselectable')) {
-    return watchNextRenderer['tabs'][tabId]['tabRenderer']['endpoint']
-        ['browseEndpoint']['browseId'];
-  } else {
+String? getTabBrowseId(dynamic watchNextRenderer, int tabId) {
+  try {
+    if (watchNextRenderer == null) return null;
+    final tabs = watchNextRenderer['tabs'];
+    if (tabs is! List || tabId >= tabs.length) return null;
+    final tabRenderer = tabs[tabId]?['tabRenderer'];
+    if (tabRenderer == null || tabRenderer.containsKey('unselectable')) {
+      return null;
+    }
+    return tabRenderer['endpoint']?['browseEndpoint']?['browseId'];
+  } catch (_) {
     return null;
   }
 }
@@ -729,8 +734,10 @@ List<dynamic> parseSearchResults(List<dynamic> results,
 dynamic parseSearchResult(Map<String, dynamic> data,
     List<String> searchResultTypes, String? resultType, String? category) {
   if ((resultType != null && resultType.contains("playlist")) ||
-      category!.contains("playlists")) {
+      (category != null && category.toLowerCase().contains("playlist"))) {
     resultType = 'playlist';
+  } else if (category != null && category.toLowerCase().contains("video")) {
+    resultType = 'video';
   }
   int defaultOffset = (resultType == null) ? 2 : 0;
   Map<String, dynamic> searchResult = {'category': category};

@@ -499,6 +499,10 @@ class PlayerController extends GetxController
       await _audioHandler.customAction("shuffleCmd", {"index": index});
     }
     await _audioHandler.customAction("playByIndex", {"index": index});
+
+    if (playfrom?.type == PlaylingFromType.SELECTION && mediaItems.length <= 5) {
+      _fetchAndUpdateRelatedQueue(mediaItems[index]);
+    }
   }
 
   Future<void> startRadio(MediaItem? mediaItem, {String? playlistid}) async {
@@ -507,15 +511,23 @@ class PlayerController extends GetxController
   }
 
   Future<void> _addRadioContinuation(dynamic item) async {
-    final isSong = item is MediaItem;
-    final content = await _musicServices.getWatchPlaylist(
-        videoId: isSong ? item.id : "",
-        radio: true,
-        limit: 24,
-        playlistId: isSong ? null : item,
-        additionalParamsNext: radioContinuationParam);
-    radioContinuationParam = content['additionalParamsForNext'];
-    await enqueueSongList(List<MediaItem>.from(content['tracks']));
+    try {
+      if (radioContinuationParam == null) return;
+      final isSong = item is MediaItem;
+      final content = await _musicServices.getWatchPlaylist(
+          videoId: isSong ? item.id : "",
+          radio: true,
+          limit: 24,
+          playlistId: isSong ? null : item,
+          additionalParamsNext: radioContinuationParam);
+      radioContinuationParam = content['additionalParamsForNext'];
+      final newTracks = List<MediaItem>.from(content['tracks'] ?? []);
+      if (newTracks.isNotEmpty) {
+        await enqueueSongList(newTracks);
+      }
+    } catch (e) {
+      printERROR("addRadioContinuation error: $e");
+    }
   }
 
   ///enqueueSong   append a song to current queue

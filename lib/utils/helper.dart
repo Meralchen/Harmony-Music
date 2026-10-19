@@ -1,7 +1,9 @@
+import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
+import 'app_constants.dart';
 import '/ui/navigator.dart';
 import '/ui/widgets/sort_widget.dart';
 
@@ -160,31 +162,93 @@ void sortArtist(
   }
 }
 
+class VersionUpdateInfo {
+  final bool isAvailable;
+  final String latestVersion;
+  final String releaseNotes;
+  final String releaseUrl;
+
+  const VersionUpdateInfo({
+    required this.isAvailable,
+    required this.latestVersion,
+    this.releaseNotes = '',
+    this.releaseUrl = appReleasesUrl,
+  });
+}
+
+List<int> _parseVersionParts(String version) {
+  var clean = version.trim();
+  if (clean.startsWith('v') || clean.startsWith('V')) {
+    clean = clean.substring(1);
+  }
+  if (clean.contains('+')) {
+    clean = clean.split('+')[0];
+  }
+  if (clean.contains('-')) {
+    clean = clean.split('-')[0];
+  }
+  return clean.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+}
+
+bool isVersionGreater(String current, String available) {
+  final c = _parseVersionParts(current);
+  final a = _parseVersionParts(available);
+  final len = max(c.length, a.length);
+  for (int i = 0; i < len; i++) {
+    final cPart = i < c.length ? c[i] : 0;
+    final aPart = i < a.length ? a[i] : 0;
+    if (aPart > cPart) return true;
+    if (aPart < cPart) return false;
+  }
+  return false;
+}
+
+/// Checks for new version and returns detailed update info
+Future<VersionUpdateInfo> newVersionCheckWithDetails(String currentVersion) async {
+  try {
+    final dio = Dio();
+    try {
+      final res = await dio.get(appLatestReleaseApiUrl);
+      if (res.data != null) {
+        final tagName = (res.data['tag_name'] as String?)?.trim() ?? '';
+        final htmlUrl = (res.data['html_url'] as String?) ?? appReleasesUrl;
+        final body = (res.data['body'] as String?) ?? '';
+        final isAvailable = isVersionGreater(currentVersion, tagName);
+        return VersionUpdateInfo(
+          isAvailable: isAvailable,
+          latestVersion: tagName.startsWith('v') || tagName.startsWith('V')
+              ? tagName
+              : 'v$tagName',
+          releaseNotes: body,
+          releaseUrl: htmlUrl,
+        );
+      }
+    } catch (_) {
+      // Fallback to tags API if latest release endpoint fails
+    }
+
+    final tags = (await dio.get(appTagsApiUrl)).data;
+    if (tags != null && (tags as List).isNotEmpty) {
+      final availableVersion = (tags[0]['name'] as String).trim();
+      final isAvailable = isVersionGreater(currentVersion, availableVersion);
+      return VersionUpdateInfo(
+        isAvailable: isAvailable,
+        latestVersion: availableVersion.startsWith('v') || availableVersion.startsWith('V')
+            ? availableVersion
+            : 'v$availableVersion',
+      );
+    }
+    return const VersionUpdateInfo(isAvailable: false, latestVersion: '');
+  } catch (e) {
+    printINFO("Error checking new version: $e");
+    return const VersionUpdateInfo(isAvailable: false, latestVersion: '');
+  }
+}
+
 /// Return true if new version available
 Future<bool> newVersionCheck(String currentVersion) async {
-  try {
-    final tags = (await Dio()
-            .get("https://api.github.com/repos/anandnet/Harmony-Music/tags"))
-        .data;
-    final availableVersion = tags[0]['name'] as String;
-    List currentVersion_ = currentVersion.substring(1).split(".");
-    List availableVersion_ = availableVersion.substring(1).split(".");
-    if (int.parse(availableVersion_[0]) > int.parse(currentVersion_[0])) {
-      return true;
-    } else if (int.parse(availableVersion_[1]) >
-            int.parse(currentVersion_[1]) &&
-        int.parse(availableVersion_[0]) == int.parse(currentVersion_[0])) {
-      return true;
-    } else if (int.parse(availableVersion_[2]) >
-            int.parse(currentVersion_[2]) &&
-        int.parse(availableVersion_[0]) == int.parse(currentVersion_[0]) &&
-        int.parse(availableVersion_[1]) == int.parse(currentVersion_[1])) {
-      return true;
-    }
-    return false;
-  } catch (e) {
-    return false;
-  }
+  final info = await newVersionCheckWithDetails(currentVersion);
+  return info.isAvailable;
 }
 
 String getTimeString(Duration time) {
