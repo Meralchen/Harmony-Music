@@ -720,27 +720,38 @@ class SettingsScreen extends StatelessWidget {
                     },
                   ),
                   const Divider(),
-                  SizedBox(
-                    child: Column(
-                      children: [
-                        Text(
-                          "Harmony Music",
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        Obx(
-                          () => Text(
-                            settingsController.currentVersion,
-                            style: Theme.of(context).textTheme.titleMedium,
+                  InkWell(
+                    borderRadius: BorderRadius.circular(10),
+                    onTap: () {
+                      launchUrl(
+                        Uri.parse(appGithubUrl),
+                        mode: LaunchMode.externalApplication,
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 8.0, horizontal: 16.0),
+                      child: Column(
+                        children: [
+                          Text(
+                            "Harmony Music",
+                            style: Theme.of(context).textTheme.titleLarge,
                           ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4.0),
-                          child: Text(
-                            "Maintained by $appGithubUser • Forked from $appOriginalAuthor",
-                            style: Theme.of(context).textTheme.bodySmall,
+                          Obx(
+                            () => Text(
+                              settingsController.currentVersion,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
                           ),
-                        ),
-                      ],
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4.0),
+                            child: Text(
+                              "Maintained by $appGithubUser",
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -749,10 +760,18 @@ class SettingsScreen extends StatelessWidget {
           )),
           Padding(
             padding: const EdgeInsets.only(bottom: 20.0),
-            child: Obx(
-              () => Text(
-                "${settingsController.currentVersion} ${"by".tr} $appGithubUser",
-                style: Theme.of(context).textTheme.bodySmall,
+            child: InkWell(
+              onTap: () {
+                launchUrl(
+                  Uri.parse(appGithubUrl),
+                  mode: LaunchMode.externalApplication,
+                );
+              },
+              child: Obx(
+                () => Text(
+                  "${settingsController.currentVersion} ${"by".tr} $appGithubUser",
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
               ),
             ),
           ),

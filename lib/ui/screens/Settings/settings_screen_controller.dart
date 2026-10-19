@@ -49,7 +49,7 @@ class SettingsScreenController extends GetxController {
   final keepScreenAwake = false.obs;
   final restorePlaybackSession = false.obs;
   final cacheHomeScreenData = true.obs;
-  final _currentVersion = "v1.12.2".obs;
+  final _currentVersion = "v1.23.0".obs;
   String get currentVersion => _currentVersion.value;
   final latestVersion = "".obs;
   final releaseNotes = "".obs;

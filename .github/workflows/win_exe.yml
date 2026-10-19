@@ -1,16 +1,21 @@
 name: Build Windows exe 
 on:
+  workflow_dispatch:
   workflow_run:
     workflows: ["Code quality check"]
     types:
       - completed
+  push:
+    tags:
+      - 'v*'
       
 jobs:
 
   build-windows-exe:
     if: >
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push'
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'push' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: windows-2022
     env:
       SIGNING_PFX_B64: ${{ secrets.SIGNING_PFX_B64 }}
