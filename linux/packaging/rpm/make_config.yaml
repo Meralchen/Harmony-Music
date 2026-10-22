@@ -10,8 +10,6 @@ url: https://github.com/NPP-exe/Harmony-Music
 
 spec_macros:
   - "%define _build_id_links none"
-  - "%define buildsubdir ."
-  - "%define __spec_install_pre cd %{_builddir}"
 
 requires:
   - mpv-libs

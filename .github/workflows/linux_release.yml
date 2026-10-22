@@ -53,6 +53,23 @@ jobs:
             wget
           sudo ln -sf /bin/dash /usr/bin/sh
 
+      - name: Configure rpmbuild wrapper for RPM 6 compatibility
+        run: |
+          sudo tee /usr/local/bin/rpmbuild > /dev/null << 'EOF'
+          #!/usr/bin/env bash
+          set -e
+          for arg in "$@"; do
+            if [[ "$arg" == *.spec && -f "$arg" ]]; then
+              echo "==> Patching $arg for RPM 6 build directory layout..."
+              sed -i 's|cp -r %{name}/\* %{buildroot}%{_datadir}/%{name}|if [ -d "%{_topdir}/BUILD/%{name}" ]; then cp -r "%{_topdir}/BUILD/%{name}"/* %{buildroot}%{_datadir}/%{name}/; elif [ -d "%{_builddir}/%{name}" ]; then cp -r "%{_builddir}/%{name}"/* %{buildroot}%{_datadir}/%{name}/; else cp -r ../%{name}/* %{buildroot}%{_datadir}/%{name}/; fi|g' "$arg"
+              sed -i 's|cp -r [^ ]*\.desktop %{buildroot}%{_datadir}/applications/%{name}\.desktop|find %{_topdir}/BUILD -name "*.desktop" -exec cp {} %{buildroot}%{_datadir}/applications/%{name}.desktop \\; -quit|g' "$arg"
+              sed -i 's|cp -r [^ ]*\.png %{buildroot}%{_datadir}/pixmaps/%{name}\.png|find %{_topdir}/BUILD -name "*.png" -exec cp {} %{buildroot}%{_datadir}/pixmaps/%{name}.png \\; -quit|g' "$arg"
+            fi
+          done
+          exec /usr/bin/rpmbuild "$@"
+          EOF
+          sudo chmod +x /usr/local/bin/rpmbuild
+
       - name: Install Flutter dependencies
         run: flutter pub get
 
@@ -79,10 +96,7 @@ jobs:
         run: flutter_distributor package --platform linux --targets deb --skip-clean
 
       - name: Package RPM build
-        run: |
-          ln -sf build/linux/x64/release/bundle harmonymusic
-          ln -sf assets/icons/icon.png harmonymusic.png
-          flutter_distributor package --platform linux --targets rpm --skip-clean
+        run: flutter_distributor package --platform linux --targets rpm --skip-clean
 
       - name: Package AppImage build
         continue-on-error: true
