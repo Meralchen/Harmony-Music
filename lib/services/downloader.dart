@@ -192,7 +192,9 @@ class Downloader extends GetxService {
             final lrcPath = "$dirPath/$songTitle.lrc";
             await File(lrcPath).writeAsString(lyricsText);
           }
-        } catch (_) {}
+        } catch (e) {
+          printERROR("Could not cache lyrics: $e");
+        }
 
         // Write metadata tags
         try {
@@ -301,14 +303,18 @@ class Downloader extends GetxService {
               year = await musicServ.getSongYear(song.id);
             }
           }
-        } catch (_) {}
+        } catch (e) {
+          printERROR("Could not fetch song year: $e");
+        }
 
         // Save Thumbnail
         try {
           final thumbnailPath =
               "${settingsScreenController.supportDirPath}/thumbnails/${song.id}.png";
           await _dio.downloadUri(song.artUri!, thumbnailPath);
-        } catch (e) {}
+        } catch (e) {
+          printERROR("Could not save thumbnail: $e");
+        }
 
         // Fetch & embed lyrics into .lrc file and songJson
         String lyricsText = '';
@@ -330,7 +336,9 @@ class Downloader extends GetxService {
                 final ytmLyrics = await musicSvc.getLyrics(browseId);
                 if (ytmLyrics != null) lyricsText = ytmLyrics.toString();
               }
-            } catch (_) {}
+            } catch (e) {
+              printERROR("Could not fetch YTM lyrics: $e");
+            }
           }
           if (lyricsText.isEmpty) {
             final ovh = await musicSvc.getLyricsFromLyricsOvh(

@@ -233,7 +233,9 @@ class HomeScreenController extends GetxController {
                 title: value[0]["title"] ?? "Similar Songs");
             Hive.box("AppPrefs").put("recentSongId", songId);
           }
-        } catch (e) {}
+        } catch (e) {
+          printERROR("Error getting content related to song: $e");
+        }
       }
       if (quickPicks_ == null) {
         try {
@@ -243,7 +245,9 @@ class HomeScreenController extends GetxController {
                 List<MediaItem>.from(homeContentListMap[0]["contents"]),
                 title: homeContentListMap[0]["title"]);
           }
-        } catch (_) {}
+        } catch (e) {
+          printERROR("Fallback home content failed: $e");
+        }
       }
     }
     if (quickPicks_ == null) return;
