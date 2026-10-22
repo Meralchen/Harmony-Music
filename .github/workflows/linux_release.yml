@@ -49,25 +49,56 @@ jobs:
             libfuse2 \
             patchelf \
             pkg-config \
+            python3 \
             rpm \
             wget
           sudo ln -sf /bin/dash /usr/bin/sh
 
       - name: Configure rpmbuild wrapper for RPM 6 compatibility
         run: |
+          sudo tee /usr/local/bin/patch_spec.py > /dev/null << 'EOF'
+          import sys, re
+
+          spec_path = sys.argv[1]
+          with open(spec_path, 'r', encoding='utf-8') as f:
+              content = f.read()
+
+          content = re.sub(
+              r'cp -r %\{name\}/\*.*',
+              r'if [ -d "%{_topdir}/BUILD/%{name}" ]; then cp -r "%{_topdir}/BUILD/%{name}"/* %{buildroot}%{_datadir}/%{name}/; elif [ -d "%{_builddir}/%{name}" ]; then cp -r "%{_builddir}/%{name}"/* %{buildroot}%{_datadir}/%{name}/; else cp -r ../%{name}/* %{buildroot}%{_datadir}/%{name}/; fi',
+              content
+          )
+          content = re.sub(
+              r'cp -r [^\n]*\.desktop.*',
+              r'find %{_topdir}/BUILD -name "*.desktop" -exec cp {} %{buildroot}%{_datadir}/applications/%{name}.desktop \; -quit',
+              content
+          )
+          content = re.sub(
+              r'cp -r [^\n]*\.png.*',
+              r'find %{_topdir}/BUILD -name "*.png" -exec cp {} %{buildroot}%{_datadir}/pixmaps/%{name}.png \; -quit',
+              content
+          )
+
+          with open(spec_path, 'w', encoding='utf-8') as f:
+              f.write(content)
+          EOF
+
           sudo tee /usr/local/bin/rpmbuild > /dev/null << 'EOF'
           #!/usr/bin/env bash
           set -e
           for arg in "$@"; do
             if [[ "$arg" == *.spec && -f "$arg" ]]; then
-              echo "==> Patching $arg for RPM 6 build directory layout..."
-              sed -i 's|cp -r %{name}/\* %{buildroot}%{_datadir}/%{name}|if [ -d "%{_topdir}/BUILD/%{name}" ]; then cp -r "%{_topdir}/BUILD/%{name}"/* %{buildroot}%{_datadir}/%{name}/; elif [ -d "%{_builddir}/%{name}" ]; then cp -r "%{_builddir}/%{name}"/* %{buildroot}%{_datadir}/%{name}/; else cp -r ../%{name}/* %{buildroot}%{_datadir}/%{name}/; fi|g' "$arg"
-              sed -i 's|cp -r [^ ]*\.desktop %{buildroot}%{_datadir}/applications/%{name}\.desktop|find %{_topdir}/BUILD -name "*.desktop" -exec cp {} %{buildroot}%{_datadir}/applications/%{name}.desktop \\; -quit|g' "$arg"
-              sed -i 's|cp -r [^ ]*\.png %{buildroot}%{_datadir}/pixmaps/%{name}\.png|find %{_topdir}/BUILD -name "*.png" -exec cp {} %{buildroot}%{_datadir}/pixmaps/%{name}.png \\; -quit|g' "$arg"
+              echo "==> Original $arg:"
+              cat "$arg"
+              python3 /usr/local/bin/patch_spec.py "$arg"
+              echo "==> Patched $arg:"
+              cat "$arg"
             fi
           done
           exec /usr/bin/rpmbuild "$@"
           EOF
+
+          sudo chmod +x /usr/local/bin/patch_spec.py
           sudo chmod +x /usr/local/bin/rpmbuild
 
       - name: Install Flutter dependencies
