@@ -53,13 +53,15 @@ jobs:
         run: |
           echo "Decoding release keystore..."
           echo "$KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+          cp android/app/upload-keystore.jks android/upload-keystore.jks
           cat <<EOF > android/key.properties
           storePassword=$KEY_STORE_PASSWORD
           keyPassword=$KEY_PASSWORD
           keyAlias=$KEY_ALIAS
           storeFile=upload-keystore.jks
           EOF
-          echo "android/key.properties successfully generated."
+          cp android/key.properties android/app/key.properties
+          echo "Keystore and key.properties created in both android/ and android/app/."
 
       - name: Notice if signing secret is not configured
         if: ${{ env.KEYSTORE_BASE64 == '' }}
@@ -76,6 +78,16 @@ jobs:
 
       - name: Build Split per ABI APKs
         run: flutter build apk --release --split-per-abi
+
+      - name: Verify APK Signature
+        run: |
+          echo "Verifying APK signing status..."
+          APKSIGNER=$(find $ANDROID_SDK_ROOT/build-tools -name apksigner | sort -V | tail -n 1)
+          if [ -n "$APKSIGNER" ]; then
+            "$APKSIGNER" verify --verbose --print-certs build/app/outputs/flutter-apk/app-release.apk
+          else
+            echo "apksigner tool not found in SDK build-tools."
+          fi
 
       - name: Upload Universal APK Artifact
         uses: actions/upload-artifact@v4

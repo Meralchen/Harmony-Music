@@ -68,8 +68,13 @@ android {
                 if (!keystoreFile.exists()) {
                     keystoreFile = file(keystoreProperties['storeFile'])
                 }
+                if (!keystoreFile.exists()) {
+                    keystoreFile = rootProject.file("app/${keystoreProperties['storeFile']}")
+                }
                 storeFile keystoreFile
                 storePassword keystoreProperties['storePassword']
+                v1SigningEnabled true
+                v2SigningEnabled true
             }
         }
     }
