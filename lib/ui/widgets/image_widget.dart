@@ -49,9 +49,11 @@ class ImageWidget extends StatelessWidget {
     //                 ? "${artist!.browseId}_artist"
     //                 : "";
 
-    /// only valid for offline songs
-    final bool offlineAvailable =
-        song != null && (song?.extras?["url"] ?? "").contains("file");
+    /// only valid for offline or local songs
+    final bool isOfflineOrLocal = song != null &&
+        ((song?.extras?["url"] ?? "").contains("file") ||
+            (song?.extras?["isLocal"] == true) ||
+            (song!.artUri != null && song!.artUri!.isScheme('file')));
 
     return Container(
       height: size,
@@ -61,14 +63,32 @@ class ImageWidget extends StatelessWidget {
         shape: artist != null ? BoxShape.circle : BoxShape.rectangle,
         borderRadius: artist != null ? null : BorderRadius.circular(5),
       ),
-      child: offlineAvailable
-          ? Image.file(
-              File(
-                  "${Get.find<SettingsScreenController>().supportDirPath}/thumbnails/${song!.id}.png"),
-              height: size,
-              width: size,
-              fit: BoxFit.cover,
-            )
+      child: isOfflineOrLocal
+          ? Builder(builder: (context) {
+              File fileToLoad;
+              if (song!.artUri != null && song!.artUri!.isScheme('file')) {
+                fileToLoad = File(song!.artUri!.toFilePath());
+              } else {
+                fileToLoad = File(
+                    "${Get.find<SettingsScreenController>().supportDirPath}/thumbnails/${song!.id}.png");
+              }
+              return Image.file(
+                fileToLoad,
+                height: size,
+                width: size,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.secondary,
+                    shape: artist != null ? BoxShape.circle : BoxShape.rectangle,
+                    borderRadius:
+                        artist != null ? null : BorderRadius.circular(5),
+                  ),
+                  child: Image.asset("assets/icons/song.png"),
+                ),
+              );
+            })
           : CachedNetworkImage(
               height: size,
               width: size,

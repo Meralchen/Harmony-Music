@@ -6,15 +6,33 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
+import 'package:path/path.dart' as p;
 
 import '../../../utils/helper.dart';
 import '../../widgets/snackbar.dart';
+import '../Settings/settings_screen_controller.dart';
 
 class LocalSongsController extends GetxController {
   final RxList<MediaItem> localSongsList = RxList();
+  final RxList<MediaItem> filteredSongsList = RxList();
+  final RxString searchQuery = ''.obs;
+  final TextEditingController searchController = TextEditingController();
   final isFetched = false.obs;
+  final isScanning = false.obs;
 
   static const _hiveBox = 'LocalSongs';
+  static const _foldersBox = 'LocalFolders';
+
+  static const _supportedAudioExts = {
+    '.mp3',
+    '.m4a',
+    '.flac',
+    '.wav',
+    '.ogg',
+    '.aac',
+    '.opus',
+    '.wma',
+  };
 
   @override
   void onInit() {
@@ -22,7 +40,40 @@ class LocalSongsController extends GetxController {
     _loadFromHive();
   }
 
-  /// Load previously saved local song paths from Hive
+  @override
+  void onClose() {
+    searchController.dispose();
+    super.onClose();
+  }
+
+  void onSearch(String query) {
+    searchQuery.value = query;
+    _applyFilter();
+  }
+
+  void clearSearch() {
+    searchQuery.value = '';
+    searchController.clear();
+    _applyFilter();
+  }
+
+  void _applyFilter() {
+    final query = searchQuery.value.trim().toLowerCase();
+    if (query.isEmpty) {
+      filteredSongsList.value = List.from(localSongsList);
+    } else {
+      filteredSongsList.value = localSongsList.where((song) {
+        final title = song.title.toLowerCase();
+        final artist = (song.artist ?? '').toLowerCase();
+        final album = (song.album ?? '').toLowerCase();
+        return title.contains(query) ||
+            artist.contains(query) ||
+            album.contains(query);
+      }).toList();
+    }
+  }
+
+  /// Load previously saved local song metadata from Hive
   Future<void> _loadFromHive() async {
     final box = await Hive.openBox(_hiveBox);
     final items = <MediaItem>[];
@@ -37,10 +88,69 @@ class LocalSongsController extends GetxController {
       }
     }
     localSongsList.value = items;
+    _applyFilter();
     isFetched.value = true;
   }
 
-  /// Let the user pick audio files from the device
+  /// Pick an entire directory/folder and recursively import all audio tracks
+  Future<void> pickAndAddFolder() async {
+    final selectedDirectory = await FilePicker.platform.getDirectoryPath();
+    if (selectedDirectory == null || selectedDirectory.isEmpty) return;
+
+    isScanning.value = true;
+    try {
+      final dir = Directory(selectedDirectory);
+      if (!await dir.exists()) {
+        isScanning.value = false;
+        return;
+      }
+
+      // Save scanned folder
+      final folderBox = await Hive.openBox(_foldersBox);
+      folderBox.put(selectedDirectory, selectedDirectory);
+
+      final box = await Hive.openBox(_hiveBox);
+      int added = 0;
+
+      final entities = dir.listSync(recursive: true, followLinks: false);
+      for (final entity in entities) {
+        if (entity is File) {
+          final ext = p.extension(entity.path).toLowerCase();
+          if (_supportedAudioExts.contains(ext)) {
+            final path = entity.path;
+            if (localSongsList.any((s) => s.extras?['url'] == path)) {
+              continue;
+            }
+            final item = await _buildMediaItem(path);
+            if (item != null) {
+              await box.put(item.id, _toJson(item));
+              localSongsList.add(item);
+              added++;
+            }
+          }
+        }
+      }
+
+      _applyFilter();
+      if (Get.context != null) {
+        ScaffoldMessenger.of(Get.context!).showSnackBar(
+          snackbar(
+            Get.context!,
+            added > 0
+                ? 'Added $added local song(s) from folder'
+                : 'No new audio files found in folder',
+            size: SanckBarSize.MEDIUM,
+          ),
+        );
+      }
+    } catch (e) {
+      printERROR('Error scanning folder: $e');
+    } finally {
+      isScanning.value = false;
+    }
+  }
+
+  /// Pick individual audio files from the device
   Future<void> pickAndAddFiles() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.audio,
@@ -53,15 +163,17 @@ class LocalSongsController extends GetxController {
     for (final file in result.files) {
       if (file.path == null) continue;
       final path = file.path!;
-      // Avoid duplicates
-      if (localSongsList.any((s) => s.id == path)) continue;
+      if (localSongsList.any((s) => s.extras?['url'] == path)) continue;
+
       final item = await _buildMediaItem(path);
       if (item != null) {
-        box.put(path, _toJson(item));
+        await box.put(item.id, _toJson(item));
         localSongsList.add(item);
         added++;
       }
     }
+
+    _applyFilter();
     if (added > 0 && Get.context != null) {
       ScaffoldMessenger.of(Get.context!).showSnackBar(
         snackbar(Get.context!, 'Added $added local song(s)',
@@ -73,21 +185,29 @@ class LocalSongsController extends GetxController {
   /// Remove a local song from the list and Hive
   Future<void> removeSong(MediaItem song) async {
     final box = await Hive.openBox(_hiveBox);
-    box.delete(song.id);
-    localSongsList.remove(song);
+    await box.delete(song.id);
+    localSongsList.removeWhere((s) => s.id == song.id);
+    _applyFilter();
+
+    try {
+      final supportDir = Get.find<SettingsScreenController>().supportDirPath;
+      final thumbFile = File('$supportDir/thumbnails/${song.id}.png');
+      if (await thumbFile.exists()) {
+        await thumbFile.delete();
+      }
+    } catch (e) {
+      printERROR('Could not delete thumbnail for ${song.id}: $e');
+    }
   }
 
-  /// Build a MediaItem from a local file path, reading ID3 tags if available
+  /// Build a MediaItem from a local file path, reading ID3 tags and extracting artwork
   Future<MediaItem?> _buildMediaItem(String path) async {
     try {
       final file = File(path);
       if (!await file.exists()) return null;
 
-      String title = path.split(Platform.pathSeparator).last;
-      // Remove extension from title
-      if (title.contains('.')) {
-        title = title.substring(0, title.lastIndexOf('.'));
-      }
+      final songId = 'local_${path.hashCode.abs()}';
+      String title = p.basenameWithoutExtension(path);
       String? artist;
       String? album;
       Uri? artUri;
@@ -95,21 +215,38 @@ class LocalSongsController extends GetxController {
       try {
         final tag = await AudioTags.read(path);
         if (tag != null) {
-          if (tag.title != null && tag.title!.isNotEmpty) title = tag.title!;
-          artist = tag.trackArtist;
-          album = tag.album;
-          // Extract embedded artwork if available
+          if (tag.title != null && tag.title!.trim().isNotEmpty) {
+            title = tag.title!.trim();
+          }
+          if (tag.trackArtist != null && tag.trackArtist!.trim().isNotEmpty) {
+            artist = tag.trackArtist!.trim();
+          }
+          if (tag.album != null && tag.album!.trim().isNotEmpty) {
+            album = tag.album!.trim();
+          }
+          // Extract embedded album art thumbnail if present
           if (tag.pictures.isNotEmpty) {
-            // We'll use a data URI for embedded art — not persisted, just in memory
-            // For simplicity, leave artUri null; UI will show music note icon
+            try {
+              final supportDir =
+                  Get.find<SettingsScreenController>().supportDirPath;
+              final thumbDir = Directory('$supportDir/thumbnails');
+              if (!await thumbDir.exists()) {
+                await thumbDir.create(recursive: true);
+              }
+              final thumbFile = File('${thumbDir.path}/$songId.png');
+              await thumbFile.writeAsBytes(tag.pictures.first.bytes);
+              artUri = Uri.file(thumbFile.path);
+            } catch (e) {
+              printERROR('LocalSongs: could not save artwork for $path: $e');
+            }
           }
         }
-      } catch (_) {
-        // AudioTags read failed — use filename as title
+      } catch (e) {
+        printERROR('LocalSongs: AudioTags error for $path: $e');
       }
 
       return MediaItem(
-        id: path,
+        id: songId,
         title: title,
         artist: artist ?? 'Unknown Artist',
         album: album,
@@ -127,11 +264,24 @@ class LocalSongsController extends GetxController {
   }
 
   MediaItem _fromJson(Map<String, dynamic> json) {
+    final id = json['id'] as String;
+    Uri? artUri;
+    try {
+      final supportDir = Get.find<SettingsScreenController>().supportDirPath;
+      final thumbFile = File('$supportDir/thumbnails/$id.png');
+      if (thumbFile.existsSync()) {
+        artUri = Uri.file(thumbFile.path);
+      }
+    } catch (e) {
+      printERROR('Error checking thumbnail for $id: $e');
+    }
+
     return MediaItem(
-      id: json['id'] as String,
+      id: id,
       title: json['title'] as String,
       artist: json['artist'] as String?,
       album: json['album'] as String?,
+      artUri: artUri,
       playable: true,
       extras: Map<String, dynamic>.from(json['extras'] as Map? ?? {}),
     );

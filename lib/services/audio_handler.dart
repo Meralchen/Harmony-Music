@@ -524,6 +524,29 @@ class MyAudioHandler extends BaseAudioHandler with GetxServiceMixin {
         currentIndex = songIndex;
         final isNewUrlReq = extras['newUrl'] ?? false;
         final currentSong = queue.value[currentIndex];
+
+        if (currentSong.extras?['isLocal'] == true ||
+            currentSong.id.startsWith('local_')) {
+          isSongLoading = true;
+          playbackState.add(playbackState.value
+              .copyWith(processingState: AudioProcessingState.loading));
+          if (_playList.children.isNotEmpty) {
+            await _playList.clear();
+          }
+          mediaItem.add(currentSong);
+          final localUrl = currentSong.extras!['url'] as String;
+          currentSongUrl = localUrl;
+          isPlayingUsingLockCachingSource = false;
+          await _playList.add(AudioSource.uri(
+            Uri.file(localUrl),
+            tag: currentSong,
+          ));
+          playbackState
+              .add(playbackState.value.copyWith(queueIndex: currentIndex));
+          isSongLoading = false;
+          await _player.play();
+          break;
+        }
         final futureStreamInfo =
             checkNGetUrl(currentSong.id, generateNewUrl: isNewUrlReq);
         final bool restoreSession = extras['restoreSession'] ?? false;

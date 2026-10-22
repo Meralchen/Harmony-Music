@@ -260,6 +260,30 @@ class HomeScreenController extends GetxController {
         .put("homeScreenDataTime", DateTime.now().millisecondsSinceEpoch);
   }
 
+  /// Automatically update quick picks & middle content with similar suggestions when any song is played
+  Future<void> updateQuickPicksForSong(String songId) async {
+    if (songId.isEmpty || songId.startsWith('local_')) return;
+    try {
+      final value = await _musicServices.getContentRelatedToSong(
+          songId, getContentHlCode());
+      if (value != null && value.isNotEmpty) {
+        if (value[0]["contents"] != null &&
+            (value[0]["contents"] as List).isNotEmpty) {
+          quickPicks.value = QuickPicks(
+              List<MediaItem>.from(value[0]["contents"]),
+              title: value[0]["title"] ?? "Similar Songs");
+          middleContent.value = _setContentList(value);
+          cachedHomeScreenData(updateQuickPicksNMiddleContent: true);
+          await Hive.box("AppPrefs").put("recentSongId", songId);
+          await Hive.box("AppPrefs")
+              .put("homeScreenDataTime", DateTime.now().millisecondsSinceEpoch);
+        }
+      }
+    } catch (e) {
+      printERROR("Error updating quick picks for song $songId: $e");
+    }
+  }
+
   String getContentHlCode() {
     const List<String> unsupportedLangIds = ["ia", "ga", "fj", "eo"];
     final userLangId =

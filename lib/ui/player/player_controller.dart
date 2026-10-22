@@ -280,6 +280,11 @@ class PlayerController extends GetxController
         await _addToRP(currentSong.value!);
         // Save most recently played song ID for "Based on Last Interaction" home content
         Hive.box('AppPrefs').put('recentSongId', currentSong.value!.id);
+        if (Get.isRegistered<HomeScreenController>() &&
+            !currentSong.value!.id.startsWith('local_')) {
+          Get.find<HomeScreenController>()
+              .updateQuickPicksForSong(currentSong.value!.id);
+        }
         if (isRadioModeOn && currentQueue.length > 1 &&
             (currentSong.value!.id == currentQueue.last.id)) {
           await _addRadioContinuation(radioInitiatorItem!);
@@ -862,16 +867,13 @@ class PlayerController extends GetxController
       try {
         final song = currentSong.value!;
 
-        // 0. Check offline / downloaded lyrics
+        // 0. Check offline / downloaded / local lyrics
         String? savedLyrics = song.extras?['lyrics'] as String?;
-        if (savedLyrics == null || savedLyrics.isEmpty) {
-          final songUrl = song.extras?['url'] as String?;
-          if (songUrl != null &&
-              (songUrl.endsWith('.mp3') ||
-                  songUrl.endsWith('.m4a') ||
-                  songUrl.endsWith('.opus'))) {
-            final lrcPath =
-                '${songUrl.substring(0, songUrl.lastIndexOf('.'))}.lrc';
+        final songUrl = song.extras?['url'] as String?;
+        if ((savedLyrics == null || savedLyrics.isEmpty) && songUrl != null) {
+          final dotIdx = songUrl.lastIndexOf('.');
+          if (dotIdx != -1) {
+            final lrcPath = '${songUrl.substring(0, dotIdx)}.lrc';
             if (await File(lrcPath).exists()) {
               savedLyrics = await File(lrcPath).readAsString();
             }
@@ -911,22 +913,26 @@ class PlayerController extends GetxController
         // --- Multi-source lyrics fallback chain ---
         bool lyricsFound = false;
 
-        // Source 2: YouTube Music browse API
-        try {
-          final related = await _musicServices.getWatchPlaylist(
-              videoId: song.id, onlyRelated: true);
-          final relatedLyricsId = related['lyrics'];
-          if (relatedLyricsId != null) {
-            final lyrics_ = await _musicServices.getLyrics(relatedLyricsId);
-            if (lyrics_ != null && lyrics_.toString().isNotEmpty) {
-              lyrics.value = {"synced": "", "plainLyrics": lyrics_};
-              cachedLyricsModel = null;
-              lyricsFound = true;
+        // Source 2: YouTube Music browse API (cloud songs only)
+        if (!song.id.startsWith('local_')) {
+          try {
+            final related = await _musicServices.getWatchPlaylist(
+                videoId: song.id, onlyRelated: true);
+            final relatedLyricsId = related['lyrics'];
+            if (relatedLyricsId != null) {
+              final lyrics_ = await _musicServices.getLyrics(relatedLyricsId);
+              if (lyrics_ != null && lyrics_.toString().isNotEmpty) {
+                lyrics.value = {"synced": "", "plainLyrics": lyrics_};
+                cachedLyricsModel = null;
+                lyricsFound = true;
+              }
             }
+          } catch (e) {
+            printERROR("Could not fetch YTM lyrics: $e");
           }
-        } catch (_) {}
+        }
 
-        // Source 3: LRCLIB (synced LRC + plain text, no API key needed)
+        // Source 3: LRCLIB (synced LRC + plain text, works for BOTH local and online songs!)
         if (!lyricsFound) {
           try {
             final durationSecs = progressBarStatus.value.total.inSeconds;
@@ -935,20 +941,37 @@ class PlayerController extends GetxController
             if (lrclibResult != null) {
               final synced = lrclibResult['synced'] ?? '';
               final plain = lrclibResult['plain'] ?? '';
-              lyrics.value = {"synced": synced, "plainLyrics": plain};
-              if (synced.isNotEmpty) {
-                cachedLyricsModel = LyricsModelBuilder.create()
-                    .bindLyricToMain(synced)
-                    .getModel();
-              } else {
-                cachedLyricsModel = null;
+              if (synced.isNotEmpty || plain.isNotEmpty) {
+                lyrics.value = {"synced": synced, "plainLyrics": plain};
+                if (synced.isNotEmpty) {
+                  cachedLyricsModel = LyricsModelBuilder.create()
+                      .bindLyricToMain(synced)
+                      .getModel();
+                } else {
+                  cachedLyricsModel = null;
+                }
+                lyricsFound = true;
+                // If local song, auto cache to .lrc file next to it for offline use!
+                if (songUrl != null && song.id.startsWith('local_')) {
+                  try {
+                    final dotIdx = songUrl.lastIndexOf('.');
+                    if (dotIdx != -1) {
+                      final lrcPath = '${songUrl.substring(0, dotIdx)}.lrc';
+                      await File(lrcPath)
+                          .writeAsString(synced.isNotEmpty ? synced : plain);
+                    }
+                  } catch (e) {
+                    printERROR("Could not auto-cache local lyrics: $e");
+                  }
+                }
               }
-              lyricsFound = true;
             }
-          } catch (_) {}
+          } catch (e) {
+            printERROR("LRCLIB fallback failed: $e");
+          }
         }
 
-        // Source 4: lyrics.ovh (plain text last resort)
+        // Source 4: lyrics.ovh (plain text fallback for BOTH local and online songs!)
         if (!lyricsFound) {
           try {
             final plain = await _musicServices.getLyricsFromLyricsOvh(
@@ -957,8 +980,21 @@ class PlayerController extends GetxController
               lyrics.value = {"synced": "", "plainLyrics": plain};
               cachedLyricsModel = null;
               lyricsFound = true;
+              if (songUrl != null && song.id.startsWith('local_')) {
+                try {
+                  final dotIdx = songUrl.lastIndexOf('.');
+                  if (dotIdx != -1) {
+                    final lrcPath = '${songUrl.substring(0, dotIdx)}.lrc';
+                    await File(lrcPath).writeAsString(plain);
+                  }
+                } catch (e) {
+                  printERROR("Could not auto-cache local lyrics: $e");
+                }
+              }
             }
-          } catch (_) {}
+          } catch (e) {
+            printERROR("lyrics.ovh fallback failed: $e");
+          }
         }
 
         if (!lyricsFound) {

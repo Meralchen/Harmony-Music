@@ -1,3 +1,4 @@
+import 'package:buttons_tabbar/buttons_tabbar.dart';
 import 'local_songs_controller.dart';
 import 'local_songs_screen.dart';
 import 'package:flutter/material.dart';
@@ -12,74 +13,129 @@ import '../../widgets/list_widget.dart';
 import '../../widgets/sort_widget.dart';
 import '../Settings/settings_screen_controller.dart';
 
-class SongsLibraryWidget extends StatelessWidget {
+class SongsLibraryWidget extends StatefulWidget {
   const SongsLibraryWidget({super.key, this.isBottomNavActive = false});
   final bool isBottomNavActive;
 
   @override
+  State<SongsLibraryWidget> createState() => _SongsLibraryWidgetState();
+}
+
+class _SongsLibraryWidgetState extends State<SongsLibraryWidget>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    if (!Get.isRegistered<LocalSongsController>()) {
+      Get.lazyPut<LocalSongsController>(() => LocalSongsController());
+    }
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final topPadding = context.isLandscape ? 50.0 : 90.0;
+    final topPadding = widget.isBottomNavActive
+        ? 10.0
+        : (context.isLandscape ? 50.0 : 85.0);
+
     return Padding(
-      padding: isBottomNavActive
-          ? const EdgeInsets.only(left: 15)
-          : EdgeInsets.only(left: 5.0, top: topPadding),
+      padding: EdgeInsets.only(
+        left: widget.isBottomNavActive ? 15.0 : 5.0,
+        right: 10.0,
+        top: topPadding,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          isBottomNavActive
-              ? const SizedBox(
-                  height: 10,
-                )
-              : Padding(
-                  padding: const EdgeInsets.only(right: 15.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "libSongs".tr,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      TextButton.icon(
-                        icon: const Icon(Icons.folder_open, size: 18),
-                        label: const Text('Local Music'),
-                        onPressed: () {
-                          if (!Get.isRegistered<LocalSongsController>()) {
-                            Get.lazyPut<LocalSongsController>(
-                                () => LocalSongsController());
-                          }
-                          Get.to(() => const LocalSongsScreen());
-                        },
-                      ),
-                    ],
-                  ),
+          Padding(
+            padding: const EdgeInsets.only(left: 4.0, right: 10.0, bottom: 8.0),
+            child: Row(
+              children: [
+                Text(
+                  "libSongs".tr,
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
-          Obx(() {
-            final libSongsController = Get.find<LibrarySongsController>();
-            return SortWidget(
-              tag: "LibSongSort",
-              screenController: libSongsController,
-              itemCountTitle: "${libSongsController.librarySongsList.length}",
-              itemIcon: Icons.music_note,
-              titleLeftPadding: 9,
-              requiredSortTypes: buildSortTypeSet(true, true),
-              isSearchFeatureRequired: true,
-              isSongDeletetioFeatureRequired: true,
-              onSort: (type, ascending) {
-                libSongsController.onSort(type, ascending);
-              },
-              onSearch: libSongsController.onSearch,
-              onSearchClose: libSongsController.onSearchClose,
-              onSearchStart: libSongsController.onSearchStart,
-              startAdditionalOperation:
-                  libSongsController.startAdditionalOperation,
-              selectAll: libSongsController.selectAll,
-              performAdditionalOperation:
-                  libSongsController.performAdditionalOperation,
-              cancelAdditionalOperation:
-                  libSongsController.cancelAdditionalOperation,
-            );
-          }),
-          GetX<LibrarySongsController>(builder: (controller) {
+                const SizedBox(width: 16),
+                ButtonsTabBar(
+                  controller: _tabController,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                  backgroundColor:
+                      Theme.of(context).textTheme.titleMedium?.color!,
+                  unselectedBackgroundColor:
+                      Theme.of(context).colorScheme.secondary,
+                  borderWidth: 0,
+                  borderColor: Colors.transparent,
+                  unselectedLabelStyle: TextStyle(
+                    color: Theme.of(context).textTheme.titleMedium?.color!,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  labelStyle: TextStyle(
+                    color: Theme.of(context).canvasColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  tabs: const [
+                    Tab(text: "Harmony Songs"),
+                    Tab(text: "Local Songs"),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildHarmonySongsTab(context),
+                const LocalSongsView(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHarmonySongsTab(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Obx(() {
+          final libSongsController = Get.find<LibrarySongsController>();
+          return SortWidget(
+            tag: "LibSongSort",
+            screenController: libSongsController,
+            itemCountTitle: "${libSongsController.librarySongsList.length}",
+            itemIcon: Icons.music_note,
+            titleLeftPadding: 9,
+            requiredSortTypes: buildSortTypeSet(true, true),
+            isSearchFeatureRequired: true,
+            isSongDeletetioFeatureRequired: true,
+            onSort: (type, ascending) {
+              libSongsController.onSort(type, ascending);
+            },
+            onSearch: libSongsController.onSearch,
+            onSearchClose: libSongsController.onSearchClose,
+            onSearchStart: libSongsController.onSearchStart,
+            startAdditionalOperation:
+                libSongsController.startAdditionalOperation,
+            selectAll: libSongsController.selectAll,
+            performAdditionalOperation:
+                libSongsController.performAdditionalOperation,
+            cancelAdditionalOperation:
+                libSongsController.cancelAdditionalOperation,
+          );
+        }),
+        Expanded(
+          child: GetX<LibrarySongsController>(builder: (controller) {
             return controller.librarySongsList.isNotEmpty
                 ? (controller.additionalOperationMode.value ==
                         OperationMode.none
@@ -98,16 +154,15 @@ class SongsLibraryWidget extends StatelessWidget {
                         mode: controller.additionalOperationMode.value,
                         screenController: controller,
                       ))
-                : Expanded(
-                    child: Center(
-                        child: Text(
+                : Center(
+                    child: Text(
                       "noOfflineSong".tr,
                       style: Theme.of(context).textTheme.titleMedium,
-                    )),
+                    ),
                   );
-          })
-        ],
-      ),
+          }),
+        ),
+      ],
     );
   }
 }
