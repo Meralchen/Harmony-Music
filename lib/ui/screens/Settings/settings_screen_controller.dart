@@ -49,7 +49,7 @@ class SettingsScreenController extends GetxController {
   final keepScreenAwake = false.obs;
   final restorePlaybackSession = false.obs;
   final cacheHomeScreenData = true.obs;
-  final _currentVersion = "v1.23.0".obs;
+  final _currentVersion = "v1.24.0".obs;
   String get currentVersion => _currentVersion.value;
   final latestVersion = "".obs;
   final releaseNotes = "".obs;
@@ -280,7 +280,9 @@ class SettingsScreenController extends GetxController {
   void onContentChange(dynamic value) {
     setBox.put('discoverContentType', value);
     discoverContentType.value = value;
-    Get.find<HomeScreenController>().changeDiscoverContent(value);
+    // Invalidate cached home screen data so fresh content is loaded
+    setBox.put('homeScreenDataTime', 0);
+    Get.find<HomeScreenController>().loadContentFromNetwork();
   }
 
   void toggleCachingSongsValue(bool value) {

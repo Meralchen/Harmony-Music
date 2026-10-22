@@ -1,3 +1,5 @@
+import 'local_songs_controller.dart';
+import 'local_songs_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -28,11 +30,27 @@ class SongsLibraryWidget extends StatelessWidget {
               ? const SizedBox(
                   height: 10,
                 )
-              : Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    "libSongs".tr,
-                    style: Theme.of(context).textTheme.titleLarge,
+              : Padding(
+                  padding: const EdgeInsets.only(right: 15.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "libSongs".tr,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      TextButton.icon(
+                        icon: const Icon(Icons.folder_open, size: 18),
+                        label: const Text('Local Music'),
+                        onPressed: () {
+                          if (!Get.isRegistered<LocalSongsController>()) {
+                            Get.lazyPut<LocalSongsController>(
+                                () => LocalSongsController());
+                          }
+                          Get.to(() => const LocalSongsScreen());
+                        },
+                      ),
+                    ],
                   ),
                 ),
           Obx(() {

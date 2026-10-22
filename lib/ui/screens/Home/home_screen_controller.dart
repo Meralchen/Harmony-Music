@@ -46,7 +46,7 @@ class HomeScreenController extends GetxController {
         final currTimeSecsDiff = DateTime.now().millisecondsSinceEpoch -
             (box.get("homeScreenDataTime") ??
                 DateTime.now().millisecondsSinceEpoch);
-        if (currTimeSecsDiff / 1000 > 3600 * 8) {
+        if (currTimeSecsDiff / 1000 > 3600 * 3) { // Refresh every 3 hours for fresh content
           loadContentFromNetwork(silent: true);
         }
       } else {
@@ -227,13 +227,23 @@ class HomeScreenController extends GetxController {
           final value = await _musicServices.getContentRelatedToSong(
               songId, getContentHlCode());
           middleContent.value = _setContentList(value);
-          if (value.isNotEmpty && (value[0]['title']).contains("like")) {
-            quickPicks_ =
-                QuickPicks(List<MediaItem>.from(value[0]["contents"]));
+          if (value.isNotEmpty) {
+            quickPicks_ = QuickPicks(
+                List<MediaItem>.from(value[0]["contents"]),
+                title: value[0]["title"] ?? "Similar Songs");
             Hive.box("AppPrefs").put("recentSongId", songId);
           }
-          // ignore: empty_catches
         } catch (e) {}
+      }
+      if (quickPicks_ == null) {
+        try {
+          final homeContentListMap = await _musicServices.getHome(limit: 3);
+          if (homeContentListMap.isNotEmpty) {
+            quickPicks_ = QuickPicks(
+                List<MediaItem>.from(homeContentListMap[0]["contents"]),
+                title: homeContentListMap[0]["title"]);
+          }
+        } catch (_) {}
       }
     }
     if (quickPicks_ == null) return;
