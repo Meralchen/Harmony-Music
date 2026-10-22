@@ -64,18 +64,23 @@ jobs:
               content = f.read()
 
           content = re.sub(
-              r'cp -r %\{name\}/\*.*',
+              r'cp -r [^/\n\r]+/\*.*',
               r'if [ -d "%{_topdir}/BUILD/%{name}" ]; then cp -r "%{_topdir}/BUILD/%{name}"/* %{buildroot}%{_datadir}/%{name}/; elif [ -d "%{_builddir}/%{name}" ]; then cp -r "%{_builddir}/%{name}"/* %{buildroot}%{_datadir}/%{name}/; else cp -r ../%{name}/* %{buildroot}%{_datadir}/%{name}/; fi',
               content
           )
           content = re.sub(
-              r'cp -r [^\n]*\.desktop.*',
+              r'cp -r [^\n\r]*\.desktop.*',
               r'find %{_topdir}/BUILD -name "*.desktop" -exec cp {} %{buildroot}%{_datadir}/applications/%{name}.desktop \; -quit',
               content
           )
           content = re.sub(
-              r'cp -r [^\n]*\.png.*',
+              r'cp -r [^\n\r]*\.png.*',
               r'find %{_topdir}/BUILD -name "*.png" -exec cp {} %{buildroot}%{_datadir}/pixmaps/%{name}.png \; -quit',
+              content
+          )
+          content = re.sub(
+              r'cp -r [^\n\r]*\.xml.*',
+              r'find %{_topdir}/BUILD -name "*.xml" -exec cp {} %{buildroot}%{_datadir}/metainfo/%{name}.appdata.xml \; -quit || :',
               content
           )
 
@@ -116,7 +121,10 @@ jobs:
         run: |
           wget -q https://github.com/AppImage/AppImageKit/releases/download/13/obsolete-appimagetool-x86_64.AppImage -O /tmp/appimagetool.AppImage
           chmod +x /tmp/appimagetool.AppImage
-          sudo mv /tmp/appimagetool.AppImage /usr/local/bin/appimagetool
+          cd /tmp
+          ./appimagetool.AppImage --appimage-extract
+          sudo mv squashfs-root /opt/appimagetool
+          sudo ln -sf /opt/appimagetool/AppRun /usr/local/bin/appimagetool
 
       - name: Prepare packaging staging links
         run: |
@@ -130,6 +138,8 @@ jobs:
         run: flutter_distributor package --platform linux --targets rpm --skip-clean
 
       - name: Package AppImage build
+        env:
+          ARCH: x86_64
         continue-on-error: true
         run: flutter_distributor package --platform linux --targets appimage --skip-clean
 
