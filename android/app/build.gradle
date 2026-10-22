@@ -61,31 +61,36 @@ android {
 
     signingConfigs {
         release {
+            def keyAliasVal = keystoreProperties['keyAlias'] ?: 'harmonymusic'
+            def keyPasswordVal = keystoreProperties['keyPassword'] ?: 'HarmonyMusicPass2026'
+            def storePasswordVal = keystoreProperties['storePassword'] ?: 'HarmonyMusicPass2026'
+            def keystoreFile = file('upload-keystore.jks')
+
             if (keystorePropertiesFile.exists() && keystoreProperties['storeFile']) {
-                keyAlias keystoreProperties['keyAlias']
-                keyPassword keystoreProperties['keyPassword']
-                def keystoreFile = rootProject.file(keystoreProperties['storeFile'])
-                if (!keystoreFile.exists()) {
-                    keystoreFile = file(keystoreProperties['storeFile'])
+                def configuredFile = rootProject.file(keystoreProperties['storeFile'])
+                if (!configuredFile.exists()) {
+                    configuredFile = file(keystoreProperties['storeFile'])
                 }
-                if (!keystoreFile.exists()) {
-                    keystoreFile = rootProject.file("app/${keystoreProperties['storeFile']}")
+                if (!configuredFile.exists()) {
+                    configuredFile = rootProject.file("app/${keystoreProperties['storeFile']}")
                 }
-                storeFile keystoreFile
-                storePassword keystoreProperties['storePassword']
-                v1SigningEnabled true
-                v2SigningEnabled true
+                if (configuredFile.exists()) {
+                    keystoreFile = configuredFile
+                }
             }
+
+            keyAlias keyAliasVal
+            keyPassword keyPasswordVal
+            storeFile keystoreFile
+            storePassword storePasswordVal
+            v1SigningEnabled true
+            v2SigningEnabled true
         }
     }
 
     buildTypes {
         release {
-            if (keystorePropertiesFile.exists() && keystoreProperties['storeFile']) {
-                signingConfig signingConfigs.release
-            } else {
-                signingConfig signingConfigs.debug
-            }
+            signingConfig signingConfigs.release
         }
     }
     namespace 'com.anandnet.harmonymusic'

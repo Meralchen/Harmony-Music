@@ -49,23 +49,22 @@ jobs:
         run: echo "const updateCheckFlag = true;" > update_check_flag_file.dart
 
       - name: Configure Keystore for Release Signing
-        if: ${{ env.KEYSTORE_BASE64 != '' }}
         run: |
-          echo "Decoding release keystore..."
-          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "Decoding release keystore from secrets..."
+            echo "$KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+          else
+            echo "Using repository release keystore (upload-keystore.jks)."
+          fi
           cp android/app/upload-keystore.jks android/upload-keystore.jks
           cat <<EOF > android/key.properties
-          storePassword=$KEY_STORE_PASSWORD
-          keyPassword=$KEY_PASSWORD
-          keyAlias=$KEY_ALIAS
+          storePassword=${KEY_STORE_PASSWORD:-HarmonyMusicPass2026}
+          keyPassword=${KEY_PASSWORD:-HarmonyMusicPass2026}
+          keyAlias=${KEY_ALIAS:-harmonymusic}
           storeFile=upload-keystore.jks
           EOF
           cp android/key.properties android/app/key.properties
-          echo "Keystore and key.properties created in both android/ and android/app/."
-
-      - name: Notice if signing secret is not configured
-        if: ${{ env.KEYSTORE_BASE64 == '' }}
-        run: echo "KEYSTORE_BASE64 is not set in GitHub repository secrets — building with debug signing fallback."
+          echo "Keystore and key.properties successfully configured."
 
       - name: Flutter clean
         run: flutter clean
