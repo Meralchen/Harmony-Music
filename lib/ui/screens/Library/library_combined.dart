@@ -5,17 +5,12 @@ import '/ui/screens/Settings/settings_screen_controller.dart';
 import '/ui/widgets/piped_sync_widget.dart';
 import '../../widgets/create_playlist_dialog.dart';
 import 'library.dart';
-import 'local_songs_controller.dart';
-import 'local_songs_screen.dart';
 
 class CombinedLibrary extends StatelessWidget {
   const CombinedLibrary({super.key});
 
   @override
   Widget build(BuildContext context) {
-    if (!Get.isRegistered<LocalSongsController>()) {
-      Get.lazyPut<LocalSongsController>(() => LocalSongsController());
-    }
     final tabCon = Get.put(CombinedLibraryController());
     final settingscrnController = Get.find<SettingsScreenController>();
 
@@ -64,7 +59,6 @@ class CombinedLibrary extends StatelessWidget {
             Tab(text: "playlists".tr),
             Tab(text: "albums".tr),
             Tab(text: "artists".tr),
-            const Tab(text: "Local"),
           ],
         ),
         title: Padding(
@@ -83,7 +77,6 @@ class CombinedLibrary extends StatelessWidget {
               isAlbumContent: false, isBottomNavActive: true),
           PlaylistNAlbumLibraryWidget(isBottomNavActive: true),
           LibraryArtistWidget(isBottomNavActive: true),
-          LocalSongsScreen(),
         ],
       ),
     );
@@ -97,7 +90,7 @@ class CombinedLibraryController extends GetxController
   @override
   void onInit() {
     super.onInit();
-    tabController = TabController(vsync: this, length: 5);
+    tabController = TabController(vsync: this, length: 4);
   }
 
   @override

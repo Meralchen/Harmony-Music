@@ -6,6 +6,7 @@ import 'package:harmonymusic/ui/player/player_controller.dart';
 import 'package:hive/hive.dart';
 
 import 'loader.dart';
+import 'snackbar.dart';
 
 class SongDownloadButton extends StatelessWidget {
   const SongDownloadButton(
@@ -70,8 +71,17 @@ class SongDownloadButton extends StatelessWidget {
                         color: Theme.of(context).textTheme.titleMedium!.color,
                       ),
                       onPressed: () {
-                        // Allow downloading cached songs to permanent storage
-                        downloader.download(song);
+                        (Hive.openBox("SongsCache").then((box) {
+                          if (box.containsKey(song.id)) {
+                            if (!context.mounted) return;
+                            Navigator.of(context).pop();
+                            ScaffoldMessenger.of(context).showSnackBar(snackbar(
+                                context, "songAlreadyOfflineAlert".tr,
+                                size: SanckBarSize.BIG));
+                          } else {
+                            downloader.download(song);
+                          }
+                        }));
                       },
                     );
     });

@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:async';
 import 'package:flutter_lyric/lyrics_reader.dart';
 import 'package:flutter_lyric/lyrics_reader_model.dart';
@@ -278,8 +277,6 @@ class PlayerController extends GetxController
             .indexWhere((element) => element.id == currentSong.value!.id);
         await _checkFav();
         await _addToRP(currentSong.value!);
-        // Save most recently played song ID for "Based on Last Interaction" home content
-        Hive.box('AppPrefs').put('recentSongId', currentSong.value!.id);
         if (isRadioModeOn && currentQueue.length > 1 &&
             (currentSong.value!.id == currentQueue.last.id)) {
           await _addRadioContinuation(radioInitiatorItem!);
@@ -506,19 +503,6 @@ class PlayerController extends GetxController
     if (playfrom?.type == PlaylingFromType.SELECTION && mediaItems.length <= 5) {
       _fetchAndUpdateRelatedQueue(mediaItems[index]);
     }
-  }
-
-  /// Play a local audio file. Sets the queue to the full localSongs list and
-  /// plays starting at [index]. Local files do not use the YouTube stream fetcher.
-  Future<void> playLocalSong(MediaItem song, List<MediaItem> allSongs) async {
-    isRadioModeOn = false;
-    playinfrom.value =
-        PlaylingFrom(type: PlaylingFromType.SELECTION, name: 'Local Music');
-    _playerPanelCheck();
-    final index = allSongs.indexWhere((s) => s.id == song.id);
-    await _audioHandler.updateQueue(allSongs);
-    await _audioHandler.customAction(
-        'playLocalFile', {'index': index < 0 ? 0 : index, 'song': song});
   }
 
   Future<void> startRadio(MediaItem? mediaItem, {String? playlistid}) async {
@@ -860,44 +844,12 @@ class PlayerController extends GetxController
         showLyricsflag.value) {
       isLyricsLoading.value = true;
       try {
-        final song = currentSong.value!;
-
-        // 0. Check offline / downloaded lyrics
-        String? savedLyrics = song.extras?['lyrics'] as String?;
-        if (savedLyrics == null || savedLyrics.isEmpty) {
-          final songUrl = song.extras?['url'] as String?;
-          if (songUrl != null &&
-              (songUrl.endsWith('.mp3') ||
-                  songUrl.endsWith('.m4a') ||
-                  songUrl.endsWith('.opus'))) {
-            final lrcPath =
-                '${songUrl.substring(0, songUrl.lastIndexOf('.'))}.lrc';
-            if (await File(lrcPath).exists()) {
-              savedLyrics = await File(lrcPath).readAsString();
-            }
-          }
-        }
-        if (savedLyrics != null && savedLyrics.isNotEmpty) {
-          final isSynced = savedLyrics.contains(RegExp(r'\[\d+:\d+'));
-          lyrics.value = {
-            "synced": isSynced ? savedLyrics : "",
-            "plainLyrics": isSynced ? "" : savedLyrics,
-          };
-          if (isSynced) {
-            cachedLyricsModel = LyricsModelBuilder.create()
-                .bindLyricToMain(savedLyrics)
-                .getModel();
-          }
-          isLyricsLoading.value = false;
-          return;
-        }
-
-        // 1. SyncedLyricsService
         final Map<String, dynamic>? lyricsR =
             await SyncedLyricsService.getSyncedLyrics(
-                song, progressBarStatus.value.total.inSeconds);
+                currentSong.value!, progressBarStatus.value.total.inSeconds);
         if (lyricsR != null) {
           lyrics.value = lyricsR;
+          // Build and cache the parsed model now, once — not on every UI tick
           cachedLyricsModel = lyricsR['synced'] != null &&
                   (lyricsR['synced'] as String).isNotEmpty
               ? LyricsModelBuilder.create()
@@ -907,61 +859,14 @@ class PlayerController extends GetxController
           isLyricsLoading.value = false;
           return;
         }
-
-        // --- Multi-source lyrics fallback chain ---
-        bool lyricsFound = false;
-
-        // Source 2: YouTube Music browse API
-        try {
-          final related = await _musicServices.getWatchPlaylist(
-              videoId: song.id, onlyRelated: true);
-          final relatedLyricsId = related['lyrics'];
-          if (relatedLyricsId != null) {
-            final lyrics_ = await _musicServices.getLyrics(relatedLyricsId);
-            if (lyrics_ != null && lyrics_.toString().isNotEmpty) {
-              lyrics.value = {"synced": "", "plainLyrics": lyrics_};
-              cachedLyricsModel = null;
-              lyricsFound = true;
-            }
-          }
-        } catch (_) {}
-
-        // Source 3: LRCLIB (synced LRC + plain text, no API key needed)
-        if (!lyricsFound) {
-          try {
-            final durationSecs = progressBarStatus.value.total.inSeconds;
-            final lrclibResult = await _musicServices.getLyricsFromLrcLib(
-                song.title, song.artist ?? '', durationSecs);
-            if (lrclibResult != null) {
-              final synced = lrclibResult['synced'] ?? '';
-              final plain = lrclibResult['plain'] ?? '';
-              lyrics.value = {"synced": synced, "plainLyrics": plain};
-              if (synced.isNotEmpty) {
-                cachedLyricsModel = LyricsModelBuilder.create()
-                    .bindLyricToMain(synced)
-                    .getModel();
-              } else {
-                cachedLyricsModel = null;
-              }
-              lyricsFound = true;
-            }
-          } catch (_) {}
-        }
-
-        // Source 4: lyrics.ovh (plain text last resort)
-        if (!lyricsFound) {
-          try {
-            final plain = await _musicServices.getLyricsFromLyricsOvh(
-                song.title, song.artist ?? '');
-            if (plain != null && plain.isNotEmpty) {
-              lyrics.value = {"synced": "", "plainLyrics": plain};
-              cachedLyricsModel = null;
-              lyricsFound = true;
-            }
-          } catch (_) {}
-        }
-
-        if (!lyricsFound) {
+        final related = await _musicServices.getWatchPlaylist(
+            videoId: currentSong.value!.id, onlyRelated: true);
+        final relatedLyricsId = related['lyrics'];
+        if (relatedLyricsId != null) {
+          final lyrics_ = await _musicServices.getLyrics(relatedLyricsId);
+          lyrics.value = {"synced": "", "plainLyrics": lyrics_};
+          cachedLyricsModel = null;
+        } else {
           lyrics.value = {"synced": "", "plainLyrics": "NA"};
           cachedLyricsModel = null;
         }

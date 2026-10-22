@@ -215,15 +215,11 @@ class Body extends StatelessWidget {
                                     homeScreenController)
                               ]
                             : [const HomeShimmer()];
-                        return RefreshIndicator(
-                          onRefresh: () =>
-                              homeScreenController.loadContentFromNetwork(),
-                          child: ListView.builder(
-                            padding:
-                                EdgeInsets.only(bottom: 200, top: topPadding),
-                            itemCount: items.length,
-                            itemBuilder: (context, index) => items[index],
-                          ),
+                        return ListView.builder(
+                          padding:
+                              EdgeInsets.only(bottom: 200, top: topPadding),
+                          itemCount: items.length,
+                          itemBuilder: (context, index) => items[index],
                         );
                       }),
               ),
