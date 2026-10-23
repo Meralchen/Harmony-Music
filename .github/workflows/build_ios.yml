@@ -31,6 +31,37 @@ jobs:
       - name: Install packages
         run: flutter pub get
 
+      - name: Patch terminate_restart for Flutter 3.29
+        shell: bash
+        run: |
+          set -euo pipefail
+          plugin_file="$(find "$HOME/.pub-cache/git" -path '*/terminate_restart-*/ios/Classes/TerminateRestartPlugin.swift' -print -quit)"
+          if [[ -z "$plugin_file" ]]; then
+            echo "terminate_restart iOS source was not found in the Pub cache."
+            exit 1
+          fi
+
+          python3 - "$plugin_file" <<'PY'
+          from pathlib import Path
+          import re
+          import sys
+
+          plugin_file = Path(sys.argv[1])
+          source = plugin_file.read_text()
+          pattern = re.compile(
+              r'(?m)^([ \t]*)guard let flutterEngine = flutterViewController\.engine else \{\n'
+              r'\s*print\(" \[TerminateRestart\] Error: No Flutter engine found"\)\n'
+              r'\s*return\n\s*\}'
+          )
+          matches = list(pattern.finditer(source))
+          if len(matches) != 1:
+              raise SystemExit("Unexpected terminate_restart source; refusing to patch")
+          source = pattern.sub(
+              r'\1let flutterEngine = flutterViewController.engine', source, count=1
+          )
+          plugin_file.write_text(source)
+          PY
+
       - name: Build iOS archive
         run: flutter build ipa --release --no-codesign
 
