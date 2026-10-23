@@ -1,0 +1,49 @@
+name: Build iOS IPA
+
+'on':
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Code quality check"]
+    types:
+      - completed
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-ios:
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'push' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    name: Build unsigned iOS IPA
+    runs-on: macos-15
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.29.0'
+
+      - name: Install packages
+        run: flutter pub get
+
+      - name: Build iOS archive
+        run: flutter build ipa --release --no-codesign
+
+      - name: Package unsigned IPA
+        run: |
+          mkdir -p build/ios/ipa/Payload
+          ditto build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app \
+            build/ios/ipa/Payload/Runner.app
+          cd build/ios/ipa
+          zip -qry harmonymusic-ios-unsigned.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: harmonymusic-ios-unsigned-ipa
+          path: build/ios/ipa/harmonymusic-ios-unsigned.ipa
+          if-no-files-found: error
