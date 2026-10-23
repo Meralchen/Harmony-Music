@@ -2,12 +2,20 @@ name: Build macOS
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Code quality check"]
+    types:
+      - completed
   push:
     tags:
       - 'v*'
 
 jobs:
   build-macos:
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'push' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     name: Build macOS (${{ matrix.name }})
     runs-on: ${{ matrix.runner }}
     strategy:
@@ -33,7 +41,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: subosito/flutter-action@v2
+      - name: Install Flutter SDK
+        uses: subosito/flutter-action@v2
         with:
           channel: stable
           flutter-version: '3.29.0'
