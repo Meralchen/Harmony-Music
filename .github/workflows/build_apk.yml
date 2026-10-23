@@ -34,9 +34,9 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Install NDK 26.1.10909125
+      - name: Install NDK 26.3.11579264
         run: |
-          echo "y" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "ndk;26.1.10909125"
+          echo "y" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "ndk;26.3.11579264"
 
       - name: Update lang data
         run: dart localization/generator.dart
@@ -52,10 +52,11 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          IS_FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true }}
         run: |
           set -euo pipefail
 
-          if [[ "$GITHUB_EVENT_NAME" != "pull_request" &&
+          if [[ "$IS_FORK_PR" != "true" &&
                 "$GITHUB_REPOSITORY" == "Meralchen/Harmony-Music" &&
                 -n "$KEYSTORE_BASE64" &&
                 -n "$KEY_STORE_PASSWORD" &&
