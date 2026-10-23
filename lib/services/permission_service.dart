@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '/native_bindings/android_sdk.dart' as androidSdk;
+import '/native_bindings/android_sdk.dart' as android_sdk;
 import '../utils/helper.dart';
 
 class PermissionService {
@@ -11,7 +11,7 @@ class PermissionService {
     }
     int sdk = 0;
     try {
-      sdk = androidSdk.getSDKInt();
+      sdk = android_sdk.getSDKInt();
     } catch (e) {
       printERROR("getSDKInt error: $e");
     }
