@@ -1,0 +1,43 @@
+name: Build macOS
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-macos:
+    name: Build macOS (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x86_64
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.29.0'
+
+      - name: Install packages
+        run: flutter pub get
+
+      - name: Build macOS app
+        run: flutter build macos --release --no-codesign
+
+      - name: Package app
+        run: ditto -c -k --sequesterRsrc --keepParent build/macos/Build/Products/Release/harmonymusic.app harmonymusic-macos-${{ matrix.arch }}.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: harmonymusic-macos-${{ matrix.arch }}
+          path: harmonymusic-macos-${{ matrix.arch }}.zip
+          if-no-files-found: error
