@@ -31,6 +31,29 @@ jobs:
       - name: Install packages
         run: flutter pub get
 
+      - name: Fix audiotags iOS framework download
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+
+          podspecs = list(Path.home().glob(
+              ".pub-cache/hosted/pub.dev/audiotags-*/ios/audiotags.podspec"
+          ))
+          if len(podspecs) != 1:
+              raise SystemExit(f"Expected one audiotags iOS Podspec, found {len(podspecs)}")
+
+          podspec = podspecs[0]
+          source = podspec.read_text()
+          broken = "if [ ! -d ios.zip ]d"
+          fixed = "if [ ! -f ios.zip ]; then"
+          if source.count(broken) != 1:
+              raise SystemExit("Unexpected audiotags Podspec; refusing to patch")
+          podspec.write_text(source.replace(broken, fixed, 1))
+          print(f"Fixed iOS framework download condition in {podspec}")
+          PY
+
       - name: Patch terminate_restart for Flutter 3.29
         shell: bash
         run: |
