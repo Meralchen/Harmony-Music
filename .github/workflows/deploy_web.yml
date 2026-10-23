@@ -53,6 +53,21 @@ jobs:
         with:
           path: build/web
 
+      - name: Build downloadable local web bundle
+        run: flutter build web --release --base-href / --output build/web-local
+
+      - name: Package downloadable web bundle
+        run: |
+          cp tools/web-download/README.txt tools/web-download/run-local.sh tools/web-download/run-local.bat build/web-local/
+          cd build/web-local
+          zip -qr ../../harmonymusic-web-local.zip .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: harmonymusic-web-local
+          path: harmonymusic-web-local.zip
+          if-no-files-found: error
+
   deploy:
     needs: build
     runs-on: ubuntu-latest

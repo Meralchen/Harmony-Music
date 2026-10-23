@@ -37,6 +37,7 @@ class Downloader extends GetxService {
   RxList<MediaItem> songQueue = <MediaItem>[].obs;
 
   Future<bool> checkPermissionNDir() async {
+    if (GetPlatform.isWeb) return false;
     final settingsScreenController = Get.find<SettingsScreenController>();
 
     if (!settingsScreenController.isCurrentPathsupportDownDir &&

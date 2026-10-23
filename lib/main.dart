@@ -30,7 +30,9 @@ Future<void> main() async {
   Get.put<AudioHandler>(await initAudioService(), permanent: true);
   WidgetsBinding.instance.addObserver(LifecycleHandler());
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  TerminateRestart.instance.initialize();
+  if (!GetPlatform.isWeb) {
+    TerminateRestart.instance.initialize();
+  }
   runApp(const MyApp());
 }
 
@@ -43,41 +45,46 @@ class MyApp extends StatelessWidget {
     if (!GetPlatform.isDesktop) Get.put(AppLinksController());
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     return GetMaterialApp(
-        title: 'Harmony Music',
-        home: const Home(),
-        debugShowCheckedModeBanner: false,
-        translations: Languages(),
-        locale:
-            Locale(Hive.box("AppPrefs").get('currentAppLanguageCode') ?? "en"),
-        fallbackLocale: const Locale("en"),
-        builder: (context, child) {
-          final mQuery = MediaQuery.of(context);
-          final scale =
-              mQuery.textScaler.clamp(minScaleFactor: 1.0, maxScaleFactor: 1.1);
-          return Stack(
-            children: [
-              GetX<ThemeController>(
-                builder: (controller) => MediaQuery(
-                  data: mQuery.copyWith(textScaler: scale),
-                  child: AnimatedTheme(
-                      duration: const Duration(milliseconds: 700),
-                      data: controller.themedata.value!,
-                      child: child!),
+      title: 'Harmony Music',
+      home: const Home(),
+      debugShowCheckedModeBanner: false,
+      translations: Languages(),
+      locale: Locale(
+        Hive.box("AppPrefs").get('currentAppLanguageCode') ?? "en",
+      ),
+      fallbackLocale: const Locale("en"),
+      builder: (context, child) {
+        final mQuery = MediaQuery.of(context);
+        final scale = mQuery.textScaler.clamp(
+          minScaleFactor: 1.0,
+          maxScaleFactor: 1.1,
+        );
+        return Stack(
+          children: [
+            GetX<ThemeController>(
+              builder: (controller) => MediaQuery(
+                data: mQuery.copyWith(textScaler: scale),
+                child: AnimatedTheme(
+                  duration: const Duration(milliseconds: 700),
+                  data: controller.themedata.value!,
+                  child: child!,
                 ),
               ),
-              GestureDetector(
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Container(
-                    color: Colors.transparent,
-                    height: mQuery.padding.bottom,
-                    width: mQuery.size.width,
-                  ),
+            ),
+            GestureDetector(
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  color: Colors.transparent,
+                  height: mQuery.padding.bottom,
+                  width: mQuery.size.width,
                 ),
-              )
-            ],
-          );
-        });
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 
@@ -100,15 +107,14 @@ Future<void> startApplicationServices() async {
 }
 
 initHive() async {
-  String applicationDataDirectoryPath;
-  if (GetPlatform.isDesktop) {
-    applicationDataDirectoryPath =
-        "${(await getApplicationSupportDirectory()).path}/db";
+  if (GetPlatform.isWeb) {
+    await Hive.initFlutter();
   } else {
-    applicationDataDirectoryPath =
-        (await getApplicationDocumentsDirectory()).path;
+    final applicationDataDirectoryPath = GetPlatform.isDesktop
+        ? "${(await getApplicationSupportDirectory()).path}/db"
+        : (await getApplicationDocumentsDirectory()).path;
+    await Hive.initFlutter(applicationDataDirectoryPath);
   }
-  await Hive.initFlutter(applicationDataDirectoryPath);
   await Hive.openBox("SongsCache");
   await Hive.openBox("SongDownloads");
   await Hive.openBox('SongsUrlCache');
@@ -126,7 +132,7 @@ void _setAppInitPrefs() {
       'themePrimaryColor': 4278199603,
       'discoverContentType': "QP",
       'newVersionVisibility': updateCheckFlag,
-      "cacheHomeScreenData": true
+      "cacheHomeScreenData": true,
     });
   }
 }
