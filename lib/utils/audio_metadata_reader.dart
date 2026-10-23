@@ -491,7 +491,7 @@ class AudioMetadataReader {
       final parentDir = File(audioFilePath).parent;
       if (!parentDir.existsSync()) return null;
 
-      final targetNames = const [
+      const targetNames = [
         'cover.jpg',
         'cover.jpeg',
         'cover.png',
