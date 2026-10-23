@@ -75,8 +75,11 @@ class StreamProvider {
     }
   }
 
-  Audio? get highestQualityAudio =>
-      defaultTargetPlatform == TargetPlatform.macOS
+  bool get _usesAacForNativePlayback =>
+      defaultTargetPlatform == TargetPlatform.iOS ||
+      defaultTargetPlatform == TargetPlatform.macOS;
+
+  Audio? get highestQualityAudio => _usesAacForNativePlayback
       ? highestBitrateMp4aAudio
       : audioFormats?.lastWhere(
           (item) => item.itag == 251 || item.itag == 140,
@@ -87,7 +90,9 @@ class StreamProvider {
     final mp4aFormats = audioFormats
         ?.where((item) => item.audioCodec == Codec.mp4a)
         .toList();
-    if (mp4aFormats == null || mp4aFormats.isEmpty) return null;
+    if (mp4aFormats == null || mp4aFormats.isEmpty) {
+      return audioFormats?.first;
+    }
     return mp4aFormats.lastWhere(
       (item) => item.itag == 140 || item.itag == 139,
       orElse: () => mp4aFormats.first,
@@ -99,7 +104,7 @@ class StreamProvider {
     orElse: () => audioFormats!.first,
   );
 
-  Audio? get lowQualityAudio => defaultTargetPlatform == TargetPlatform.macOS
+  Audio? get lowQualityAudio => _usesAacForNativePlayback
       ? highestBitrateMp4aAudio
       : audioFormats?.lastWhere(
           (item) => item.itag == 249 || item.itag == 139,
