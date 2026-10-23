@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:harmonymusic/utils/helper.dart';
 import 'package:harmonymusic/utils/lang_mapping.dart';
+import 'package:ionicons/ionicons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../utils/app_constants.dart';
@@ -664,146 +665,280 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ]),
               CustomExpansionTile(
-                icon: Icons.info,
+                icon: Icons.info_outline_rounded,
                 title: "appInfo".tr,
                 children: [
-                  ListTile(
-                    contentPadding: const EdgeInsets.only(left: 5, right: 10),
-                    title: Text("github".tr),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text(
-                          "githubDes".tr,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              "by ",
-                              style: Theme.of(context).textTheme.bodyMedium,
+                        // Hero Showcase Card
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 20.0),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Theme.of(context).colorScheme.primary.withAlpha(40),
+                                Theme.of(context).colorScheme.secondary.withAlpha(25),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
-                            Text(
-                              appGithubUser,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w900,
-                                color: Theme.of(context).textTheme.titleMedium?.color ?? Colors.white,
-                                letterSpacing: 0.8,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          appGithubUrl,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: (Theme.of(context).textTheme.bodySmall?.color ?? Colors.white70).withAlpha(200),
-                            decoration: TextDecoration.underline,
-                          ),
-                        ),
-                      ],
-                    ),
-                    isThreeLine: true,
-                    onTap: () {
-                      launchUrl(
-                        Uri.parse(appGithubUrl),
-                        mode: LaunchMode.externalApplication,
-                      );
-                    },
-                  ),
-                  ListTile(
-                    contentPadding: const EdgeInsets.only(left: 5, right: 10),
-                    title: const Text("Check for Updates"),
-                    subtitle: Obx(
-                      () => Text(
-                        settingsController.isNewVersionAvailable.value
-                            ? "New version ${settingsController.latestVersion.value} is available!"
-                            : "Harmony Music is up to date (${settingsController.currentVersion})",
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ),
-                    trailing: const Icon(Icons.system_update_alt),
-                    onTap: () async {
-                      final info =
-                          await settingsController.manualCheckNewVersion();
-                      if (info.isAvailable) {
-                        if (context.mounted) {
-                          showDialog(
-                            context: context,
-                            builder: (context) => const NewVersionDialog(),
-                          );
-                        }
-                      } else {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            snackbar(
-                              context,
-                              "You are on the latest version (${settingsController.currentVersion})",
-                              size: SanckBarSize.MEDIUM,
-                            ),
-                          );
-                        }
-                      }
-                    },
-                  ),
-                  const Divider(),
-                  InkWell(
-                    borderRadius: BorderRadius.circular(10),
-                    onTap: () {
-                      launchUrl(
-                        Uri.parse(appGithubUrl),
-                        mode: LaunchMode.externalApplication,
-                      );
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 8.0, horizontal: 16.0),
-                      child: Column(
-                        children: [
-                          Text(
-                            "Harmony Music",
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          Obx(
-                            () => Text(
-                              settingsController.currentVersion,
-                              style: Theme.of(context).textTheme.titleMedium,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.primary.withAlpha(60),
+                              width: 1.2,
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Theme.of(context).colorScheme.primary.withAlpha(64),
-                                    Theme.of(context).colorScheme.secondary.withAlpha(64),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // App Logo with subtle glow
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(22),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Theme.of(context).colorScheme.primary.withAlpha(60),
+                                      blurRadius: 18,
+                                      spreadRadius: 2,
+                                    ),
                                   ],
                                 ),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: Theme.of(context).colorScheme.primary.withAlpha(153),
-                                  width: 1.5,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: Image.asset(
+                                    'assets/icons/icon.png',
+                                    width: 68,
+                                    height: 68,
+                                    fit: BoxFit.cover,
+                                  ),
                                 ),
                               ),
-                              child: Text(
-                                "Maintained by NARAYAN",
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 2.0,
-                                  color: Theme.of(context).textTheme.titleMedium?.color ?? Colors.white,
+                              const SizedBox(height: 14),
+                              Text(
+                                "Harmony Music",
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
                                 ),
+                              ),
+                              const SizedBox(height: 6),
+                              Obx(
+                                () => Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.primary.withAlpha(35),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    "v${settingsController.currentVersion}",
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: Theme.of(context).colorScheme.primary,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              // Maintainer Pill
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Theme.of(context).colorScheme.primary.withAlpha(64),
+                                      Theme.of(context).colorScheme.secondary.withAlpha(64),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: Theme.of(context).colorScheme.primary.withAlpha(153),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Text(
+                                  "Maintained by NARAYAN",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1.5,
+                                    color: Theme.of(context).textTheme.titleMedium?.color ?? Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Action 1: Check for Updates Card
+                        Card(
+                          elevation: 0,
+                          color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(100),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: BorderSide(
+                              color: Theme.of(context).dividerColor.withAlpha(30),
+                            ),
+                          ),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () async {
+                              final info =
+                                  await settingsController.manualCheckNewVersion();
+                              if (info.isAvailable) {
+                                if (context.mounted) {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => const NewVersionDialog(),
+                                  );
+                                }
+                              } else {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    snackbar(
+                                      context,
+                                      "You are on the latest version (${settingsController.currentVersion})",
+                                      size: SanckBarSize.MEDIUM,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.primary.withAlpha(35),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(
+                                      Icons.system_update_alt_rounded,
+                                      color: Theme.of(context).colorScheme.primary,
+                                      size: 22,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "Check for Updates",
+                                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Obx(
+                                          () => Text(
+                                            settingsController.isNewVersionAvailable.value
+                                                ? "New version ${settingsController.latestVersion.value} is available!"
+                                                : "Harmony Music is up to date",
+                                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                              color: settingsController.isNewVersionAvailable.value
+                                                  ? Colors.amber[300]
+                                                  : Theme.of(context).textTheme.bodySmall?.color?.withAlpha(180),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.chevron_right_rounded,
+                                    color: Theme.of(context).iconTheme.color?.withAlpha(120),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 10),
+
+                        // Action 2: GitHub Repository Card
+                        Card(
+                          elevation: 0,
+                          color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(100),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: BorderSide(
+                              color: Theme.of(context).dividerColor.withAlpha(30),
+                            ),
+                          ),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () {
+                              launchUrl(
+                                Uri.parse(appGithubUrl),
+                                mode: LaunchMode.externalApplication,
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.secondary.withAlpha(35),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(
+                                      Ionicons.logo_github,
+                                      color: Theme.of(context).colorScheme.secondary,
+                                      size: 22,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "GitHub Repository",
+                                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          "$appGithubUser / $appGithubRepo",
+                                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                            color: Theme.of(context).textTheme.bodySmall?.color?.withAlpha(180),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          "Original by $appOriginalAuthor",
+                                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                            fontSize: 11,
+                                            color: Theme.of(context).textTheme.bodySmall?.color?.withAlpha(130),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.open_in_new_rounded,
+                                    size: 18,
+                                    color: Theme.of(context).iconTheme.color?.withAlpha(120),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                     ),
                   ),
                 ],
@@ -811,18 +946,15 @@ class SettingsScreen extends StatelessWidget {
             ],
           )),
           Padding(
-            padding: const EdgeInsets.only(bottom: 20.0),
-            child: InkWell(
-              onTap: () {
-                launchUrl(
-                  Uri.parse(appGithubUrl),
-                  mode: LaunchMode.externalApplication,
-                );
-              },
+            padding: const EdgeInsets.symmetric(vertical: 20.0),
+            child: Center(
               child: Obx(
                 () => Text(
-                  "${settingsController.currentVersion} ${"by".tr} $appGithubUser",
-                  style: Theme.of(context).textTheme.bodySmall,
+                  "Harmony Music v${settingsController.currentVersion} • $appGithubUser",
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).textTheme.bodySmall?.color?.withAlpha(120),
+                    letterSpacing: 0.5,
+                  ),
                 ),
               ),
             ),

@@ -119,7 +119,7 @@ void _setAppInitPrefs() {
   final appPrefs = Hive.box("AppPrefs");
   if (appPrefs.isEmpty) {
     appPrefs.putAll({
-      'themeModeType': 0,
+      'themeModeType': 2,
       "cacheSongs": false,
       "skipSilenceEnabled": false,
       'streamingQuality': 1,

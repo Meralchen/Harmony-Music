@@ -281,7 +281,8 @@ class PlayerController extends GetxController
         // Save most recently played song ID for "Based on Last Interaction" home content
         Hive.box('AppPrefs').put('recentSongId', currentSong.value!.id);
         if (Get.isRegistered<HomeScreenController>() &&
-            !currentSong.value!.id.startsWith('local_')) {
+            !currentSong.value!.id.startsWith('local_') &&
+            Hive.box("AppPrefs").get("discoverContentType") == "BOLI") {
           Get.find<HomeScreenController>()
               .updateQuickPicksForSong(currentSong.value!.id);
         }
