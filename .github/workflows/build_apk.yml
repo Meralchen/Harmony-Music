@@ -87,6 +87,13 @@ jobs:
           else
             echo "apksigner tool not found in SDK build-tools."
           fi
+          echo "Verifying APK version codes..."
+          APKANALYZER=$(find $ANDROID_SDK_ROOT/cmdline-tools -name apkanalyzer | sort -V | tail -n 1)
+          if [ -n "$APKANALYZER" ]; then
+            for apk in build/app/outputs/flutter-apk/*.apk; do
+              echo "  $apk => version-code: $($APKANALYZER manifest version-code $apk)"
+            done
+          fi
 
       - name: Upload Universal APK Artifact
         uses: actions/upload-artifact@v4

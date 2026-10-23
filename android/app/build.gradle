@@ -55,7 +55,8 @@ android {
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
         minSdkVersion flutter.minSdkVersion
         targetSdkVersion flutter.targetSdkVersion
-        versionCode flutterVersionCode.toInteger()
+        def rawCode = flutterVersionCode.toInteger()
+        versionCode rawCode < 4000 ? 4000 + rawCode : rawCode
         versionName flutterVersionName
     }
 
@@ -94,6 +95,12 @@ android {
         }
     }
     namespace 'com.anandnet.harmonymusic'
+
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            output.versionCodeOverride = defaultConfig.versionCode
+        }
+    }
 }
 
 flutter {
