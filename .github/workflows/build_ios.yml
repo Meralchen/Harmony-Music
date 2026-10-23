@@ -31,27 +31,55 @@ jobs:
       - name: Install packages
         run: flutter pub get
 
-      - name: Fix audiotags iOS framework download
+      - name: Install audiotags iOS XCFramework
         shell: bash
         run: |
           set -euo pipefail
           python3 <<'PY'
           from pathlib import Path
+          import re
+          import subprocess
+          import tempfile
+          import zipfile
 
           podspecs = list(Path.home().glob(
-              ".pub-cache/hosted/pub.dev/audiotags-*/ios/audiotags.podspec"
+            ".pub-cache/hosted/pub.dev/audiotags-*/ios/audiotags.podspec"
           ))
           if len(podspecs) != 1:
-              raise SystemExit(f"Expected one audiotags iOS Podspec, found {len(podspecs)}")
+            raise SystemExit(f"Expected one audiotags iOS Podspec, found {len(podspecs)}")
 
           podspec = podspecs[0]
           source = podspec.read_text()
-          broken = "if [ ! -d ios.zip ]d"
-          fixed = "if [ ! -f ios.zip ]; then"
-          if source.count(broken) != 1:
-              raise SystemExit("Unexpected audiotags Podspec; refusing to patch")
-          podspec.write_text(source.replace(broken, fixed, 1))
-          print(f"Fixed iOS framework download condition in {podspec}")
+          version = re.search(r'^version = "([^"]+)"', source, re.MULTILINE)
+          if version is None:
+            raise SystemExit("Could not determine audiotags version from Podspec")
+
+          framework_dir = podspec.parent / "Frameworks" / "audiotags.xcframework"
+          framework_dir.mkdir(parents=True, exist_ok=True)
+          archive = Path(tempfile.gettempdir()) / f"audiotags-ios-{version.group(1)}.zip"
+          subprocess.run([
+            "curl", "--fail", "--location", "--silent", "--show-error",
+            f"https://github.com/erikas-taroza/audiotags/releases/download/v{version.group(1)}/ios.zip",
+            "--output", str(archive),
+          ], check=True)
+          with zipfile.ZipFile(archive) as bundle:
+            bundle.extractall(framework_dir)
+          archive.unlink()
+
+          expected_libraries = [
+            framework_dir / "ios-arm64" / "libaudiotags.a",
+            framework_dir / "ios-arm64_x86_64-simulator" / "libaudiotags.a",
+          ]
+          for library in expected_libraries:
+            if not library.is_file() or library.stat().st_size == 0:
+              raise SystemExit(f"Missing audiotags native library: {library}")
+
+          downloader = re.compile(r"(?ms)^`\nmkdir Frameworks\n.*?^`\n")
+          if len(downloader.findall(source)) != 1:
+            raise SystemExit("Unexpected audiotags Podspec downloader; refusing to patch")
+          source = downloader.sub("# XCFramework is provisioned by CI.\n", source, count=1)
+          podspec.write_text(source)
+          print(f"Installed audiotags {version.group(1)} iOS XCFramework at {framework_dir}")
           PY
 
       - name: Patch terminate_restart for Flutter 3.29
