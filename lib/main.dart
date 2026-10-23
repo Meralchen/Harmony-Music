@@ -42,7 +42,9 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    if (!GetPlatform.isDesktop) Get.put(AppLinksController());
+    if (!GetPlatform.isDesktop && !GetPlatform.isWeb) {
+      Get.put(AppLinksController());
+    }
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     return GetMaterialApp(
       title: 'Harmony Music',
@@ -62,14 +64,17 @@ class MyApp extends StatelessWidget {
         return Stack(
           children: [
             GetX<ThemeController>(
-              builder: (controller) => MediaQuery(
-                data: mQuery.copyWith(textScaler: scale),
-                child: AnimatedTheme(
-                  duration: const Duration(milliseconds: 700),
-                  data: controller.themedata.value!,
-                  child: child!,
-                ),
-              ),
+              builder: (controller) {
+                final theme = controller.themedata.value ?? ThemeData.dark();
+                return MediaQuery(
+                  data: mQuery.copyWith(textScaler: scale),
+                  child: AnimatedTheme(
+                    duration: const Duration(milliseconds: 700),
+                    data: theme,
+                    child: child!,
+                  ),
+                );
+              },
             ),
             GestureDetector(
               child: Align(
@@ -123,17 +128,30 @@ initHive() async {
 
 void _setAppInitPrefs() {
   final appPrefs = Hive.box("AppPrefs");
-  if (appPrefs.isEmpty) {
-    appPrefs.putAll({
-      'themeModeType': 2,
-      "cacheSongs": false,
-      "skipSilenceEnabled": false,
-      'streamingQuality': 1,
-      'themePrimaryColor': 4278199603,
-      'discoverContentType': "QP",
-      'newVersionVisibility': updateCheckFlag,
-      "cacheHomeScreenData": true,
-    });
+  final defaults = <String, dynamic>{
+    'themeModeType': 2,
+    'cacheSongs': false,
+    'skipSilenceEnabled': false,
+    'streamingQuality': 1,
+    'themePrimaryColor': 4278199603,
+    'discoverContentType': 'QP',
+    'newVersionVisibility': updateCheckFlag,
+    'cacheHomeScreenData': true,
+    'noOfHomeScreenContent': 3,
+    'isBottomNavBarEnabled': false,
+    'isTransitionAnimationDisabled': false,
+    'loudnessNormalizationEnabled': false,
+    'autoOpenPlayer': true,
+    'restrorePlaybackSession': false,
+    'backgroundPlayEnabled': true,
+    'keepScreenAwake': false,
+    'playerUi': 0,
+    'piped': {'isLoggedIn': false, 'token': '', 'instApiUrl': ''},
+  };
+  for (final entry in defaults.entries) {
+    if (!appPrefs.containsKey(entry.key)) {
+      appPrefs.put(entry.key, entry.value);
+    }
   }
 }
 

@@ -69,6 +69,7 @@ jobs:
             SIGNING_MODE="release"
           else
             echo "Generating a temporary keystore for this non-release build."
+            rm -f android/app/upload-keystore.jks
             STORE_PASSWORD="$(openssl rand -hex 24)"
             KEY_PASS="$STORE_PASSWORD"
             KEY_ALIAS_VALUE="temporary"

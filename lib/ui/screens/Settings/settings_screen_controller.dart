@@ -132,7 +132,7 @@ class SettingsScreenController extends GetxController {
         ThemeType.values[setBox.get('themeModeType') ?? ThemeType.dark.index];
     skipSilenceEnabled.value = isDesktop
         ? false
-        : setBox.get("skipSilenceEnabled");
+        : (setBox.get("skipSilenceEnabled") ?? false);
     loudnessNormalizationEnabled.value = isDesktop
         ? false
         : (setBox.get("loudnessNormalizationEnabled") ?? false);
@@ -140,8 +140,14 @@ class SettingsScreenController extends GetxController {
     restorePlaybackSession.value =
         setBox.get("restrorePlaybackSession") ?? false;
     cacheHomeScreenData.value = setBox.get("cacheHomeScreenData") ?? true;
-    streamingQuality.value =
-        AudioQuality.values[setBox.get('streamingQuality')];
+    final savedQuality = setBox.get('streamingQuality');
+    final qualityIndex =
+        savedQuality is int &&
+            savedQuality >= 0 &&
+            savedQuality < AudioQuality.values.length
+        ? savedQuality
+        : AudioQuality.High.index;
+    streamingQuality.value = AudioQuality.values[qualityIndex];
     playerUi.value = isDesktop ? 0 : (setBox.get('playerUi') ?? 0);
     backgroundPlayEnabled.value = setBox.get("backgroundPlayEnabled") ?? true;
     keepScreenAwake.value =
@@ -158,9 +164,9 @@ class SettingsScreenController extends GetxController {
     downloadingFormat.value = setBox.get('downloadingFormat') ?? "m4a";
     discoverContentType.value = setBox.get('discoverContentType') ?? "QP";
     slidableActionEnabled.value = setBox.get('slidableActionEnabled') ?? true;
-    if (setBox.containsKey("piped")) {
-      isLinkedWithPiped.value = setBox.get("piped")['isLoggedIn'];
-    }
+    final pipedSettings = setBox.get("piped");
+    isLinkedWithPiped.value =
+        pipedSettings is Map && pipedSettings['isLoggedIn'] == true;
     stopPlyabackOnSwipeAway.value =
         setBox.get('stopPlyabackOnSwipeAway') ?? false;
     if (GetPlatform.isAndroid) {
