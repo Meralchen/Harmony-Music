@@ -75,15 +75,9 @@ class LocalSongsView extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              FilledButton.tonalIcon(
-                style: FilledButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                ),
-                icon: const Icon(Icons.create_new_folder, size: 18),
-                label: const Text('Add Folder'),
+              IconButton.filledTonal(
+                tooltip: 'Add folder',
+                icon: const Icon(Icons.create_new_folder, size: 20),
                 onPressed: controller.pickAndAddFolder,
               ),
               const SizedBox(width: 6),

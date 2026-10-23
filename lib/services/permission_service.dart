@@ -1,12 +1,53 @@
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '/native_bindings/andrid_utils.dart' show SDKInt;
+import '../utils/helper.dart';
+
 class PermissionService {
   static Future<bool> getExtStoragePermission() async {
     if (GetPlatform.isDesktop) {
-      return Future.value(true);
+      return true;
     }
-    if ((SDKInt.Companion.getSDKInt()) < 30) {
+    int sdk = 0;
+    try {
+      sdk = SDKInt.Companion.getSDKInt();
+    } catch (e) {
+      printERROR("getSDKInt error: $e");
+    }
+
+    if (sdk >= 33) {
+      if (await Permission.audio.isGranted ||
+          await Permission.manageExternalStorage.isGranted) {
+        return true;
+      }
+      final audioStatus = await Permission.audio.request();
+      if (audioStatus.isGranted) return true;
+
+      final manageStatus = await Permission.manageExternalStorage.request();
+      if (manageStatus.isGranted) return true;
+
+      if (audioStatus.isPermanentlyDenied || manageStatus.isPermanentlyDenied) {
+        await openAppSettings();
+      }
+      return await Permission.audio.isGranted ||
+          await Permission.manageExternalStorage.isGranted;
+    } else if (sdk >= 30) {
+      if (await Permission.manageExternalStorage.isGranted ||
+          await Permission.storage.isGranted) {
+        return true;
+      }
+      final manageStatus = await Permission.manageExternalStorage.request();
+      if (manageStatus.isGranted) return true;
+
+      final storageStatus = await Permission.storage.request();
+      if (storageStatus.isGranted) return true;
+
+      if (manageStatus.isPermanentlyDenied || storageStatus.isPermanentlyDenied) {
+        await openAppSettings();
+      }
+      return await Permission.manageExternalStorage.isGranted ||
+          await Permission.storage.isGranted;
+    } else {
       var status = await Permission.storage.status;
       if (status.isDenied) {
         await [
@@ -21,12 +62,6 @@ class PermissionService {
       }
 
       return (await Permission.storage.status).isGranted;
-    } else {
-      if (!await Permission.manageExternalStorage.isGranted) {
-        final permission = await Permission.manageExternalStorage.request();
-        return permission.isGranted;
-      }
-      return true;
     }
   }
 }

@@ -57,17 +57,20 @@ class _SongsLibraryWidgetState extends State<SongsLibraryWidget>
         children: [
           Padding(
             padding: const EdgeInsets.only(left: 4.0, right: 10.0, bottom: 8.0),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "libSongs".tr,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(width: 16),
+                if (!widget.isBottomNavActive) ...[
+                  Text(
+                    "libSongs".tr,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 10),
+                ],
                 ButtonsTabBar(
                   controller: _tabController,
                   contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
                   backgroundColor:
                       Theme.of(context).textTheme.titleMedium?.color!,
                   unselectedBackgroundColor:

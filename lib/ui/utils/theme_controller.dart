@@ -25,7 +25,7 @@ class ThemeController extends GetxController {
         Color(Hive.box('appPrefs').get("themePrimaryColor") ?? 4278199603);
 
     changeThemeModeType(
-        ThemeType.values[Hive.box('appPrefs').get("themeModeType") ?? 0]);
+        ThemeType.values[Hive.box('appPrefs').get("themeModeType") ?? ThemeType.dark.index]);
 
     _listenSystemBrightness();
 
@@ -37,7 +37,7 @@ class ThemeController extends GetxController {
     platformDispatcher.onPlatformBrightnessChanged = () {
       systemBrightness = platformDispatcher.platformBrightness;
       changeThemeModeType(
-          ThemeType.values[Hive.box('appPrefs').get("themeModeType")],
+          ThemeType.values[Hive.box('appPrefs').get("themeModeType") ?? ThemeType.dark.index],
           sysCall: true);
     };
   }

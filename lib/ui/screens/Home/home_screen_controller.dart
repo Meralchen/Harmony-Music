@@ -99,19 +99,25 @@ class HomeScreenController extends GetxController {
         final index = homeContentListMap
             .indexWhere((element) => element['title'] == "Trending");
         if (index != -1 && index != 0) {
-          quickPicks.value = QuickPicks(
-              List<MediaItem>.from(homeContentListMap[index]["contents"]),
-              title: "Trending");
+          final items = (homeContentListMap[index]["contents"] as List)
+              .whereType<MediaItem>()
+              .toList();
+          if (items.isNotEmpty) {
+            quickPicks.value = QuickPicks(items, title: "Trending");
+          }
         } else if (index == -1) {
           List charts = await _musicServices.getCharts(contentType);
-          final index = charts.indexWhere((element) =>
+          final chartIdx = charts.indexWhere((element) =>
               element['title'] ==
               (contentType == "TMV" ? "Top Music Videos" : "Trending"));
-          if (index != -1) {
-            quickPicks.value = QuickPicks(
-                List<MediaItem>.from(charts[index]["contents"]),
-                title: charts[index]['title']);
-            middleContentTemp.addAll(charts);
+          if (chartIdx != -1) {
+            final items = (charts[chartIdx]["contents"] as List)
+                .whereType<MediaItem>()
+                .toList();
+            if (items.isNotEmpty) {
+              quickPicks.value = QuickPicks(items, title: charts[chartIdx]['title']);
+              middleContentTemp.addAll(charts);
+            }
           }
         }
       } else if (contentType == "TMV") {
@@ -119,43 +125,95 @@ class HomeScreenController extends GetxController {
             .indexWhere((element) => element['title'] == "Top music videos");
         if (index != -1 && index != 0) {
           final con = homeContentListMap.removeAt(index);
-          quickPicks.value = QuickPicks(List<MediaItem>.from(con["contents"]),
-              title: con["title"]);
+          final items = (con["contents"] as List).whereType<MediaItem>().toList();
+          if (items.isNotEmpty) {
+            quickPicks.value = QuickPicks(items, title: con["title"]);
+          }
         } else if (index == -1) {
           List charts = await _musicServices.getCharts(contentType);
-          final index = charts.indexWhere((element) =>
+          final chartIdx = charts.indexWhere((element) =>
               element['title'] ==
               (contentType == "TMV" ? "Top Music Videos" : "Trending"));
-          if (index != -1) {
-            quickPicks.value = QuickPicks(
-                List<MediaItem>.from(charts[index]["contents"]),
-                title: charts[index]["title"]);
-            middleContentTemp.addAll(charts);
+          if (chartIdx != -1) {
+            final items = (charts[chartIdx]["contents"] as List)
+                .whereType<MediaItem>()
+                .toList();
+            if (items.isNotEmpty) {
+              quickPicks.value = QuickPicks(items, title: charts[chartIdx]["title"]);
+              middleContentTemp.addAll(charts);
+            }
           }
         }
-      } else if (contentType == "BOLI") {
-        try {
-          final songId = box.get("recentSongId");
-          if (songId != null) {
-            final rel = (await _musicServices.getContentRelatedToSong(
-                songId, getContentHlCode()));
-            final con = rel.removeAt(0);
-            quickPicks.value =
-                QuickPicks(List<MediaItem>.from(con["contents"]));
-            middleContentTemp.addAll(rel);
+      } else {
+        // contentType == "QP" or "BOLI"
+        final recentSongId = box.get("recentSongId");
+        if (recentSongId != null && recentSongId.toString().isNotEmpty) {
+          try {
+            final rel = await _musicServices.getContentRelatedToSong(
+                recentSongId, getContentHlCode());
+            if (rel != null && rel is List && rel.isNotEmpty) {
+              for (final section in rel) {
+                if (section is Map && section['contents'] is List) {
+                  final items = (section['contents'] as List)
+                      .whereType<MediaItem>()
+                      .toList();
+                  if (items.isNotEmpty) {
+                    quickPicks.value = QuickPicks(items,
+                        title: section['title']?.toString() ?? "Similar Songs");
+                    break;
+                  }
+                }
+              }
+              middleContentTemp.addAll(rel);
+            }
+          } catch (e) {
+            printERROR("Could not load recent song suggestions: $e");
           }
-        } catch (e) {
-          printERROR(
-              "Seems Based on last interaction content currently not available!");
-        }
-      }
 
-      if (quickPicks.value.songList.isEmpty) {
-        final index = homeContentListMap
-            .indexWhere((element) => element['title'] == "Quick picks");
-        final con = homeContentListMap.removeAt(index);
-        quickPicks.value = QuickPicks(List<MediaItem>.from(con["contents"]),
-            title: "Quick picks");
+          if (quickPicks.value.songList.isEmpty) {
+            try {
+              final watchData = await _musicServices.getWatchPlaylist(
+                  videoId: recentSongId, limit: 15);
+              final tracks = watchData['tracks'];
+              if (tracks != null && tracks is List) {
+                final items = tracks
+                    .whereType<MediaItem>()
+                    .where((m) => m.id != recentSongId)
+                    .toList();
+                if (items.isNotEmpty) {
+                  quickPicks.value = QuickPicks(items, title: "Similar Songs");
+                }
+              }
+            } catch (e) {
+              printERROR("getWatchPlaylist fallback error on loadContent: $e");
+            }
+          }
+        }
+
+        // If still empty or no recent song, populate from homeContentListMap
+        if (quickPicks.value.songList.isEmpty || (contentType == "QP" && recentSongId == null)) {
+          final index = homeContentListMap
+              .indexWhere((element) => element['title'] == "Quick picks");
+          if (index != -1) {
+            final con = homeContentListMap.removeAt(index);
+            final items = (con["contents"] as List).whereType<MediaItem>().toList();
+            if (items.isNotEmpty) {
+              quickPicks.value = QuickPicks(items, title: "Quick picks");
+            }
+          } else if (homeContentListMap.isNotEmpty) {
+            for (int i = 0; i < homeContentListMap.length; i++) {
+              final shelf = homeContentListMap[i];
+              if (shelf['contents'] is List) {
+                final items = (shelf['contents'] as List).whereType<MediaItem>().toList();
+                if (items.isNotEmpty) {
+                  homeContentListMap.removeAt(i);
+                  quickPicks.value = QuickPicks(items, title: shelf['title'] ?? "Quick picks");
+                  break;
+                }
+              }
+            }
+          }
+        }
       }
 
       middleContent.value = _setContentList(middleContentTemp);
@@ -227,23 +285,56 @@ class HomeScreenController extends GetxController {
           final value = await _musicServices.getContentRelatedToSong(
               songId, getContentHlCode());
           middleContent.value = _setContentList(value);
-          if (value.isNotEmpty) {
-            quickPicks_ = QuickPicks(
-                List<MediaItem>.from(value[0]["contents"]),
-                title: value[0]["title"] ?? "Similar Songs");
+          if (value is List && value.isNotEmpty) {
+            for (final section in value) {
+              if (section is Map && section['contents'] is List) {
+                final items = (section['contents'] as List)
+                    .whereType<MediaItem>()
+                    .toList();
+                if (items.isNotEmpty) {
+                  quickPicks_ = QuickPicks(items,
+                      title: section['title']?.toString() ?? "Similar Songs");
+                  break;
+                }
+              }
+            }
             Hive.box("AppPrefs").put("recentSongId", songId);
           }
         } catch (e) {
           printERROR("Error getting content related to song: $e");
         }
       }
+      if (quickPicks_ == null && songId != null) {
+        try {
+          final watchData = await _musicServices.getWatchPlaylist(
+              videoId: songId, limit: 15);
+          final tracks = watchData['tracks'];
+          if (tracks != null && tracks is List) {
+            final items = tracks
+                .whereType<MediaItem>()
+                .where((m) => m.id != songId)
+                .toList();
+            if (items.isNotEmpty) {
+              quickPicks_ = QuickPicks(items, title: "Similar Songs");
+            }
+          }
+        } catch (e) {
+          printERROR("changeDiscoverContent fallback error: $e");
+        }
+      }
       if (quickPicks_ == null) {
         try {
           final homeContentListMap = await _musicServices.getHome(limit: 3);
           if (homeContentListMap.isNotEmpty) {
-            quickPicks_ = QuickPicks(
-                List<MediaItem>.from(homeContentListMap[0]["contents"]),
-                title: homeContentListMap[0]["title"]);
+            for (final shelf in homeContentListMap) {
+              if (shelf['contents'] is List) {
+                final items = (shelf['contents'] as List).whereType<MediaItem>().toList();
+                if (items.isNotEmpty) {
+                  quickPicks_ = QuickPicks(items, title: shelf['title'] ?? "Quick picks");
+                  break;
+                }
+              }
+            }
           }
         } catch (e) {
           printERROR("Fallback home content failed: $e");
@@ -264,20 +355,59 @@ class HomeScreenController extends GetxController {
   Future<void> updateQuickPicksForSong(String songId) async {
     if (songId.isEmpty || songId.startsWith('local_')) return;
     try {
-      final value = await _musicServices.getContentRelatedToSong(
-          songId, getContentHlCode());
-      if (value != null && value.isNotEmpty) {
-        if (value[0]["contents"] != null &&
-            (value[0]["contents"] as List).isNotEmpty) {
-          quickPicks.value = QuickPicks(
-              List<MediaItem>.from(value[0]["contents"]),
-              title: value[0]["title"] ?? "Similar Songs");
+      List<MediaItem> songSuggestions = [];
+      String sectionTitle = "Similar Songs";
+
+      // 1. Try getContentRelatedToSong
+      try {
+        final value = await _musicServices.getContentRelatedToSong(
+            songId, getContentHlCode());
+        if (value != null && value is List && value.isNotEmpty) {
+          for (final section in value) {
+            if (section is Map && section['contents'] is List) {
+              final items = (section['contents'] as List)
+                  .whereType<MediaItem>()
+                  .toList();
+              if (items.isNotEmpty) {
+                songSuggestions = items;
+                sectionTitle = section['title']?.toString() ?? "Similar Songs";
+                break;
+              }
+            }
+          }
           middleContent.value = _setContentList(value);
-          cachedHomeScreenData(updateQuickPicksNMiddleContent: true);
-          await Hive.box("AppPrefs").put("recentSongId", songId);
-          await Hive.box("AppPrefs")
-              .put("homeScreenDataTime", DateTime.now().millisecondsSinceEpoch);
         }
+      } catch (e) {
+        printERROR("getContentRelatedToSong error: $e");
+      }
+
+      // 2. Fallback to getWatchPlaylist radio/automix tracks if needed
+      if (songSuggestions.isEmpty) {
+        try {
+          final watchData = await _musicServices.getWatchPlaylist(
+              videoId: songId, limit: 15);
+          final tracks = watchData['tracks'];
+          if (tracks != null && tracks is List) {
+            final items = tracks
+                .whereType<MediaItem>()
+                .where((m) => m.id != songId)
+                .toList();
+            if (items.isNotEmpty) {
+              songSuggestions = items;
+              sectionTitle = "Similar Songs";
+            }
+          }
+        } catch (e) {
+          printERROR("getWatchPlaylist fallback error on updateQuickPicks: $e");
+        }
+      }
+
+      if (songSuggestions.isNotEmpty) {
+        quickPicks.value = QuickPicks(songSuggestions, title: sectionTitle);
+        cachedHomeScreenData(updateQuickPicksNMiddleContent: true);
+        await Hive.box("AppPrefs").put("recentSongId", songId);
+        await Hive.box("AppPrefs")
+            .put("homeScreenDataTime", DateTime.now().millisecondsSinceEpoch);
       }
     } catch (e) {
       printERROR("Error updating quick picks for song $songId: $e");

@@ -691,7 +691,7 @@ class SettingsScreen extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w900,
-                                color: Theme.of(context).colorScheme.primary,
+                                color: Theme.of(context).textTheme.titleMedium?.color ?? Colors.white,
                                 letterSpacing: 0.8,
                               ),
                             ),
@@ -701,7 +701,7 @@ class SettingsScreen extends StatelessWidget {
                         Text(
                           appGithubUrl,
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.primary.withAlpha(217),
+                            color: (Theme.of(context).textTheme.bodySmall?.color ?? Colors.white70).withAlpha(200),
                             decoration: TextDecoration.underline,
                           ),
                         ),
@@ -792,12 +792,12 @@ class SettingsScreen extends StatelessWidget {
                                 ),
                               ),
                               child: Text(
-                                "Made by NARAYAN",
+                                "Maintained by NARAYAN",
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 15,
                                   fontWeight: FontWeight.w900,
-                                  letterSpacing: 2.2,
-                                  color: Theme.of(context).colorScheme.primary,
+                                  letterSpacing: 2.0,
+                                  color: Theme.of(context).textTheme.titleMedium?.color ?? Colors.white,
                                 ),
                               ),
                             ),
