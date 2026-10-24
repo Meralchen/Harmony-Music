@@ -1,5 +1,5 @@
 
-name: 'iOS and MacOS support'
+name: 'Flutter Runner'
 description: 'Github action for apk building for flutter apps.'
 runs:
   using: 'docker'
