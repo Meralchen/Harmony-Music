@@ -1,3 +1,4 @@
+import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:harmonymusic/utils/helper.dart';
@@ -669,276 +670,100 @@ class SettingsScreen extends StatelessWidget {
                 title: "appInfo".tr,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Hero Showcase Card
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 20.0),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Theme.of(context).colorScheme.primary.withAlpha(40),
-                                Theme.of(context).colorScheme.secondary.withAlpha(25),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: Theme.of(context).colorScheme.primary.withAlpha(60),
-                              width: 1.2,
-                            ),
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // App Logo with subtle glow
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(22),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Theme.of(context).colorScheme.primary.withAlpha(60),
-                                      blurRadius: 18,
-                                      spreadRadius: 2,
-                                    ),
-                                  ],
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(20),
-                                  child: Image.asset(
-                                    'assets/icons/icon.png',
-                                    width: 68,
-                                    height: 68,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 14),
-                              Text(
-                                "Harmony Music",
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Obx(
-                                () => Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.primary.withAlpha(35),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    "v${settingsController.currentVersion}",
-                                    style: TextStyle(
-                                      fontSize: 12.5,
-                                      fontWeight: FontWeight.w600,
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              // Maintainer Pill
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Theme.of(context).colorScheme.primary.withAlpha(64),
-                                      Theme.of(context).colorScheme.secondary.withAlpha(64),
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: Theme.of(context).colorScheme.primary.withAlpha(153),
-                                    width: 1.5,
-                                  ),
-                                ),
-                                child: Text(
-                                  "Maintained by NARAYAN",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 1.5,
-                                    color: Theme.of(context).textTheme.titleMedium?.color ?? Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                    padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF070B0E),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.08),
+                          width: 1.0,
                         ),
-                        const SizedBox(height: 16),
-
-                        // Action 1: Check for Updates Card
-                        Card(
-                          elevation: 0,
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(100),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            side: BorderSide(
-                              color: Theme.of(context).dividerColor.withAlpha(30),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Stack(
+                        children: [
+                          // Diffused ambient glow: center Alignment(0.0, -0.6), radius 0.9
+                          Positioned.fill(
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                gradient: RadialGradient(
+                                  center: Alignment(0.0, -0.6),
+                                  radius: 0.9,
+                                  colors: [
+                                    Color(0x3300E5FF),
+                                    Color(0x1500B4D8),
+                                    Colors.transparent,
+                                  ],
+                                  stops: [0.0, 0.45, 1.0],
+                                ),
+                              ),
                             ),
                           ),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(16),
-                            onTap: () async {
-                              final info =
-                                  await settingsController.manualCheckNewVersion();
-                              if (info.isAvailable) {
-                                if (context.mounted) {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => const NewVersionDialog(),
-                                  );
-                                }
-                              } else {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    snackbar(
-                                      context,
-                                      "You are on the latest version (${settingsController.currentVersion})",
-                                      size: SanckBarSize.MEDIUM,
-                                    ),
-                                  );
-                                }
-                              }
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).colorScheme.primary.withAlpha(35),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Icon(
-                                      Icons.system_update_alt_rounded,
-                                      color: Theme.of(context).colorScheme.primary,
-                                      size: 22,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          "Check for Updates",
-                                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 15,
+                          // Foreground Content
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 18.0, vertical: 24.0),
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                final isWide = constraints.maxWidth > 640;
+                                return Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    // 1. Header Branding (Cyan Waveform + HARMONY MUSIC + Version Pill)
+                                    _buildAmbientHeroHeader(
+                                        context, settingsController),
+                                    const SizedBox(height: 20),
+
+                                    // 2. Hero Developer Glass Card (Maintainer & Signature)
+                                    _buildDualDeveloperCard(context, isWide),
+                                    const SizedBox(height: 20),
+
+                                    // 3. Bottom Cards Grid (2 columns on wide, stacked on mobile)
+                                    if (isWide)
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            flex: 5,
+                                            child:
+                                                _buildContributorsCard(context),
                                           ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Obx(
-                                          () => Text(
-                                            settingsController.isNewVersionAvailable.value
-                                                ? "New version ${settingsController.latestVersion.value} is available!"
-                                                : "Harmony Music is up to date",
-                                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                              color: settingsController.isNewVersionAvailable.value
-                                                  ? Colors.amber[300]
-                                                  : Theme.of(context).textTheme.bodySmall?.color?.withAlpha(180),
+                                          const SizedBox(width: 14),
+                                          Expanded(
+                                            flex: 5,
+                                            child: Column(
+                                              children: [
+                                                _buildGitHubCard(context),
+                                                const SizedBox(height: 12),
+                                                _buildUpdatesCard(
+                                                    context, settingsController),
+                                              ],
                                             ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Icon(
-                                    Icons.chevron_right_rounded,
-                                    color: Theme.of(context).iconTheme.color?.withAlpha(120),
-                                  ),
-                                ],
-                              ),
+                                        ],
+                                      )
+                                    else
+                                      Column(
+                                        children: [
+                                          _buildContributorsCard(context),
+                                          const SizedBox(height: 12),
+                                          _buildGitHubCard(context),
+                                          const SizedBox(height: 12),
+                                          _buildUpdatesCard(
+                                              context, settingsController),
+                                        ],
+                                      ),
+                                    const SizedBox(height: 12),
+                                  ],
+                                );
+                              },
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 10),
-
-                        // Action 2: GitHub Repository Card
-                        Card(
-                          elevation: 0,
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(100),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            side: BorderSide(
-                              color: Theme.of(context).dividerColor.withAlpha(30),
-                            ),
-                          ),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(16),
-                            onTap: () {
-                              launchUrl(
-                                Uri.parse(appGithubUrl),
-                                mode: LaunchMode.externalApplication,
-                              );
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).colorScheme.secondary.withAlpha(35),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Icon(
-                                      Ionicons.logo_github,
-                                      color: Theme.of(context).colorScheme.secondary,
-                                      size: 22,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          "GitHub Repository",
-                                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 15,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          "$appGithubUser / $appGithubRepo",
-                                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                            color: Theme.of(context).textTheme.bodySmall?.color?.withAlpha(180),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          "Original by $appOriginalAuthor",
-                                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                            fontSize: 11,
-                                            color: Theme.of(context).textTheme.bodySmall?.color?.withAlpha(130),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Icon(
-                                    Icons.open_in_new_rounded,
-                                    size: 18,
-                                    color: Theme.of(context).iconTheme.color?.withAlpha(120),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -950,7 +775,7 @@ class SettingsScreen extends StatelessWidget {
             child: Center(
               child: Obx(
                 () => Text(
-                  "Harmony Music v${settingsController.currentVersion} • $appGithubUser",
+                  "Harmony Music ${settingsController.formattedVersion} • $appGithubUser",
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).textTheme.bodySmall?.color?.withAlpha(120),
                     letterSpacing: 0.5,
@@ -963,7 +788,641 @@ class SettingsScreen extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildAmbientHeroHeader(
+      BuildContext context, SettingsScreenController settingsController) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Glowing cyan audio waveform (#00F5FF) with soft glow BoxShadow
+        Container(
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Color(0x6600E5FF),
+                blurRadius: 30,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Image.asset(
+            'assets/images/branding_waveform_cyan.png',
+            height: 52,
+            fit: BoxFit.contain,
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // App Title: "HARMONY MUSIC"
+        // Sizing: 26sp, bold, uppercase, letter-spacing: 2.5, color: Colors.white
+        SizedBox(
+          height: 32,
+          child: FittedBox(
+            fit: BoxFit.contain,
+            child: Image.asset(
+              'assets/images/branding_harmony_music.png',
+              color: Colors.white,
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        // Version Badge: "v1.24.0" inside capsule pill
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color(0x2000E5FF),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: const Color(0x4000E5FF),
+              width: 1,
+            ),
+          ),
+          child: Obx(
+            () => Text(
+              settingsController.formattedVersion,
+              style: const TextStyle(
+                color: Color(0xFF00F5FF),
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.8,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDualDeveloperCard(BuildContext context, bool isWide) {
+    return Container(
+      margin: EdgeInsets.symmetric(
+        horizontal: isWide ? 16 : 0,
+        vertical: 12,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withValues(alpha: 0.08),
+                  Colors.white.withValues(alpha: 0.02),
+                ],
+              ),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.14),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.4),
+                  blurRadius: 24,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            padding: EdgeInsets.symmetric(
+              horizontal: isWide ? 32 : 18,
+              vertical: isWide ? 28 : 22,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // LEFT: "Maintained by NPP" (SliceyHeallow font)
+                Flexible(
+                  flex: 5,
+                  child: Container(
+                    alignment: Alignment.centerLeft,
+                    child: Image.asset(
+                      'assets/images/branding_maintained_by_npp.png',
+                      height: isWide ? 62 : 46,
+                      fit: BoxFit.contain,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                // DO NOT put any vertical divider line between them
+                // RIGHT: "Narayan" signature (BastligaOne font, Electric Neon Cyan #00F5FF)
+                Flexible(
+                  flex: 5,
+                  child: Container(
+                    alignment: Alignment.centerRight,
+                    child: Image.asset(
+                      'assets/images/branding_signature_cyan_glow.png',
+                      height: isWide ? 95 : 74,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContributorsCard(BuildContext context) {
+    return FrostedGlassBox(
+      padding: const EdgeInsets.all(20),
+      borderRadius: 22,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0x2500E5FF),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: const Color(0x5000E5FF),
+                    width: 1,
+                  ),
+                ),
+                child: const Icon(
+                  Icons.people_rounded,
+                  color: Color(0xFF00F5FF),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                "Contributors",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Maintainer: NPP-exe
+          InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () => launchUrl(
+              Uri.parse("https://github.com/NPP-exe"),
+              mode: LaunchMode.externalApplication,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: Row(
+                children: [
+                  const Text(
+                    "• ",
+                    style: TextStyle(
+                      color: Color(0xFF00F5FF),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Text(
+                    "NPP-exe",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildRoleBadge("Maintainer", const Color(0xFF00F5FF)),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+
+          // Original Creator: anandnet
+          InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () => launchUrl(
+              Uri.parse("https://github.com/anandnet"),
+              mode: LaunchMode.externalApplication,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: Row(
+                children: [
+                  const Text(
+                    "• ",
+                    style: TextStyle(
+                      color: Color(0xFF00F5FF),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Text(
+                    "anandnet",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildRoleBadge("Original Creator", const Color(0xFF00F5FF)),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Community Contributors & Beta Testers
+          const Row(
+            children: [
+              Text(
+                "• ",
+                style: TextStyle(
+                  color: Color(0xFF00F5FF),
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  "Community Contributors & Beta Testers",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Avatar Dots
+          Padding(
+            padding: const EdgeInsets.only(left: 10.0),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _buildAvatarDot(
+                  handle: "@BandhanPramanik",
+                  label: "BP",
+                  role: "Core Contributor",
+                  color: const Color(0xFF38BDF8),
+                  url: "https://github.com/BandhanPramanik",
+                ),
+                _buildAvatarDot(
+                  handle: "@Meralchen",
+                  label: "M",
+                  role: "macOS, iOS & Web",
+                  color: const Color(0xFF34D399),
+                  url: "https://github.com/Meralchen",
+                ),
+                _buildAvatarDot(
+                  handle: "@theblackcoderbr",
+                  label: "TC",
+                  role: "Nix Packaging",
+                  color: const Color(0xFFF59E0B),
+                  url: "https://github.com/theblackcoderbr",
+                ),
+                _buildAvatarDot(
+                  handle: "@jaxenisr",
+                  label: "J",
+                  role: "Contributor",
+                  color: const Color(0xFFA855F7),
+                  url: "https://github.com/jaxenisr",
+                ),
+                _buildAvatarDot(
+                  handle: "Community",
+                  label: "❤",
+                  role: "Translators & Testers",
+                  color: const Color(0xFFEC4899),
+                  url: "https://github.com/NPP-exe/Harmony-Music/graphs/contributors",
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGitHubCard(BuildContext context) {
+    return FrostedGlassBox(
+      padding: EdgeInsets.zero,
+      borderRadius: 22,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(22),
+          onTap: () => launchUrl(
+            Uri.parse(appGithubUrl),
+            mode: LaunchMode.externalApplication,
+          ),
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 18.0, vertical: 16.0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.14),
+                      width: 1,
+                    ),
+                  ),
+                  child: const Icon(
+                    Ionicons.logo_github,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        "GitHub Repository",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        "$appGithubUser / $appGithubRepo • Original by $appOriginalAuthor",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.55),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.open_in_new_rounded,
+                  size: 20,
+                  color: Colors.white.withValues(alpha: 0.4),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUpdatesCard(
+      BuildContext context, SettingsScreenController settingsController) {
+    return FrostedGlassBox(
+      padding: EdgeInsets.zero,
+      borderRadius: 22,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(22),
+          onTap: () async {
+            final info = await settingsController.manualCheckNewVersion();
+            if (info.isAvailable) {
+              if (context.mounted) {
+                showDialog(
+                  context: context,
+                  builder: (context) => const NewVersionDialog(),
+                );
+              }
+            } else {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  snackbar(
+                    context,
+                    "You are on the latest version (${settingsController.formattedVersion})",
+                    size: SanckBarSize.MEDIUM,
+                  ),
+                );
+              }
+            }
+          },
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 18.0, vertical: 16.0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.20),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.4),
+                      width: 1,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.check_circle_rounded,
+                    color: Color(0xFF10B981),
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        "Check for Updates",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Obx(
+                        () => Text(
+                          settingsController.isNewVersionAvailable.value
+                              ? "New version ${settingsController.latestVersion.value} is available!"
+                              : "Harmony Music is up to date",
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: settingsController.isNewVersionAvailable.value
+                                ? Colors.amber[300]
+                                : Colors.white.withValues(alpha: 0.55),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.auto_awesome,
+                  size: 20,
+                  color: const Color(0xFF00F5FF).withValues(alpha: 0.7),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoleBadge(String title, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2.5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: color.withValues(alpha: 0.65),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.3),
+            blurRadius: 8,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 11,
+          letterSpacing: 0.3,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatarDot({
+    required String handle,
+    required String label,
+    required String role,
+    required Color color,
+    required String url,
+  }) {
+    return Tooltip(
+      message: "$handle • $role",
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => launchUrl(
+          Uri.parse(url),
+          mode: LaunchMode.externalApplication,
+        ),
+        child: Container(
+          width: 30,
+          height: 30,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.85),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.35),
+              width: 1.0,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.35),
+                blurRadius: 6,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 11,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
+
+class FrostedGlassBox extends StatelessWidget {
+  final Widget child;
+  final double? width;
+  final double? height;
+  final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry? margin;
+  final double borderRadius;
+
+  const FrostedGlassBox({
+    super.key,
+    required this.child,
+    this.width,
+    this.height,
+    this.padding = const EdgeInsets.all(20),
+    this.margin,
+    this.borderRadius = 22,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: margin,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            width: width,
+            height: height,
+            padding: padding,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(borderRadius),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withValues(alpha: 0.09),
+                  Colors.white.withValues(alpha: 0.02),
+                ],
+              ),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.13),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 
 class ThemeSelectorDialog extends StatelessWidget {
   const ThemeSelectorDialog({super.key});

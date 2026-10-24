@@ -20,6 +20,8 @@ class LocalSongsController extends GetxController {
   final TextEditingController searchController = TextEditingController();
   final isFetched = false.obs;
   final isScanning = false.obs;
+  final RxSet<String> selectedSongIds = <String>{}.obs;
+  final RxBool isSelectionMode = false.obs;
 
   static const _hiveBox = 'LocalSongs';
   static const _foldersBox = 'LocalFolders';
@@ -274,6 +276,68 @@ class LocalSongsController extends GetxController {
       }
     } catch (e) {
       printERROR('Could not delete thumbnail for ${song.id}: $e');
+    }
+  }
+
+  void toggleSelection(String id) {
+    if (selectedSongIds.contains(id)) {
+      selectedSongIds.remove(id);
+      if (selectedSongIds.isEmpty) {
+        isSelectionMode.value = false;
+      }
+    } else {
+      selectedSongIds.add(id);
+      isSelectionMode.value = true;
+    }
+  }
+
+  void enterSelectionMode(String id) {
+    isSelectionMode.value = true;
+    selectedSongIds.add(id);
+  }
+
+  void selectAll() {
+    selectedSongIds.addAll(filteredSongsList.map((s) => s.id));
+  }
+
+  void clearSelection() {
+    selectedSongIds.clear();
+    isSelectionMode.value = false;
+  }
+
+  /// Remove multiple selected songs from Hive and local list
+  Future<void> removeSelectedSongs() async {
+    if (selectedSongIds.isEmpty) return;
+
+    final count = selectedSongIds.length;
+    final box = await Hive.openBox(_hiveBox);
+    final idsToRemove = Set<String>.from(selectedSongIds);
+
+    for (final id in idsToRemove) {
+      await box.delete(id);
+      try {
+        final supportDir = Get.find<SettingsScreenController>().supportDirPath;
+        final thumbFile = File('$supportDir/thumbnails/$id.png');
+        if (await thumbFile.exists()) {
+          await thumbFile.delete();
+        }
+      } catch (e) {
+        printERROR('Could not delete thumbnail for $id: $e');
+      }
+    }
+
+    localSongsList.removeWhere((s) => idsToRemove.contains(s.id));
+    clearSelection();
+    _applyFilter();
+
+    if (Get.context != null) {
+      ScaffoldMessenger.of(Get.context!).showSnackBar(
+        snackbar(
+          Get.context!,
+          'Removed $count song${count == 1 ? '' : 's'} from local music',
+          size: SanckBarSize.MEDIUM,
+        ),
+      );
     }
   }
 

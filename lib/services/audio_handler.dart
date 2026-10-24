@@ -269,6 +269,8 @@ class MyAudioHandler extends BaseAudioHandler with GetxServiceMixin {
     );
   }
 
+  bool _isTransitioningSong = false;
+
   void _listenToPlaybackForNextSong() {
     final playerDurationOffset = GetPlatform.isWindows
         ? 200
@@ -276,6 +278,7 @@ class MyAudioHandler extends BaseAudioHandler with GetxServiceMixin {
         ? 700
         : 0;
     _player.positionStream.listen((value) async {
+      if (_isTransitioningSong) return;
       if (_player.duration != null && _player.duration?.inSeconds != 0) {
         if (value.inMilliseconds >=
             (_player.duration!.inMilliseconds - playerDurationOffset)) {
@@ -286,14 +289,22 @@ class MyAudioHandler extends BaseAudioHandler with GetxServiceMixin {
   }
 
   Future<void> _triggerNext() async {
-    if (loopModeEnabled) {
-      await _player.seek(Duration.zero);
-      if (!_player.playing) {
-        _player.play();
+    if (_isTransitioningSong) return;
+    _isTransitioningSong = true;
+    try {
+      if (loopModeEnabled) {
+        await _player.seek(Duration.zero);
+        if (!_player.playing) {
+          _player.play();
+        }
+        return;
       }
-      return;
+      await skipToNext();
+    } finally {
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        _isTransitioningSong = false;
+      });
     }
-    skipToNext();
   }
 
   void _listenForSequenceStateChanges() {

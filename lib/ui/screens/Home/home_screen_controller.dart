@@ -100,6 +100,11 @@ class HomeScreenController extends GetxController {
     }
   }
 
+  Future<void> reloadHomeScreen() async {
+    isContentFetched.value = false;
+    await loadContentFromNetwork();
+  }
+
   Future<void> loadContentFromNetwork({bool silent = false}) async {
     final box = Hive.box("AppPrefs");
     String contentType = box.get("discoverContentType") ?? "QP";
