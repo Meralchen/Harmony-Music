@@ -676,7 +676,7 @@ class SettingsScreen extends StatelessWidget {
                         color: const Color(0xFF070B0E),
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.08),
+                          color: Colors.white.withValues(alpha: 0.08),
                           width: 1.0,
                         ),
                       ),
@@ -872,17 +872,17 @@ class SettingsScreen extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.white.withOpacity(0.08),
-                  Colors.white.withOpacity(0.02),
+                  Colors.white.withValues(alpha: 0.08),
+                  Colors.white.withValues(alpha: 0.02),
                 ],
               ),
               border: Border.all(
-                color: Colors.white.withOpacity(0.14),
+                color: Colors.white.withValues(alpha: 0.14),
                 width: 1.2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.4),
+                  color: Colors.black.withValues(alpha: 0.4),
                   blurRadius: 24,
                   offset: const Offset(0, 10),
                 ),
@@ -1041,8 +1041,8 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 10),
 
           // Community Contributors & Beta Testers
-          Row(
-            children: const [
+          const Row(
+            children: [
               Text(
                 "• ",
                 style: TextStyle(
@@ -1135,10 +1135,10 @@ class SettingsScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.08),
+                    color: Colors.white.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.14),
+                      color: Colors.white.withValues(alpha: 0.14),
                       width: 1,
                     ),
                   ),
@@ -1168,7 +1168,7 @@ class SettingsScreen extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.55),
+                          color: Colors.white.withValues(alpha: 0.55),
                           fontSize: 12,
                         ),
                       ),
@@ -1178,7 +1178,7 @@ class SettingsScreen extends StatelessWidget {
                 Icon(
                   Icons.open_in_new_rounded,
                   size: 20,
-                  color: Colors.white.withOpacity(0.4),
+                  color: Colors.white.withValues(alpha: 0.4),
                 ),
               ],
             ),
@@ -1226,10 +1226,10 @@ class SettingsScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withOpacity(0.20),
+                    color: const Color(0xFF10B981).withValues(alpha: 0.20),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: const Color(0xFF10B981).withOpacity(0.4),
+                      color: const Color(0xFF10B981).withValues(alpha: 0.4),
                       width: 1,
                     ),
                   ),
@@ -1264,7 +1264,7 @@ class SettingsScreen extends StatelessWidget {
                           style: TextStyle(
                             color: settingsController.isNewVersionAvailable.value
                                 ? Colors.amber[300]
-                                : Colors.white.withOpacity(0.55),
+                                : Colors.white.withValues(alpha: 0.55),
                             fontSize: 12,
                           ),
                         ),
@@ -1275,7 +1275,7 @@ class SettingsScreen extends StatelessWidget {
                 Icon(
                   Icons.auto_awesome,
                   size: 20,
-                  color: const Color(0xFF00F5FF).withOpacity(0.7),
+                  color: const Color(0xFF00F5FF).withValues(alpha: 0.7),
                 ),
               ],
             ),
@@ -1289,15 +1289,15 @@ class SettingsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2.5),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.18),
+        color: color.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: color.withOpacity(0.65),
+          color: color.withValues(alpha: 0.65),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.3),
+            color: color.withValues(alpha: 0.3),
             blurRadius: 8,
             spreadRadius: 0,
           ),
@@ -1334,15 +1334,15 @@ class SettingsScreen extends StatelessWidget {
           width: 30,
           height: 30,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.85),
+            color: color.withValues(alpha: 0.85),
             shape: BoxShape.circle,
             border: Border.all(
-              color: Colors.white.withOpacity(0.35),
+              color: Colors.white.withValues(alpha: 0.35),
               width: 1.0,
             ),
             boxShadow: [
               BoxShadow(
-                color: color.withOpacity(0.35),
+                color: color.withValues(alpha: 0.35),
                 blurRadius: 6,
                 spreadRadius: 1,
               ),
@@ -1399,17 +1399,17 @@ class FrostedGlassBox extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.white.withOpacity(0.09),
-                  Colors.white.withOpacity(0.02),
+                  Colors.white.withValues(alpha: 0.09),
+                  Colors.white.withValues(alpha: 0.02),
                 ],
               ),
               border: Border.all(
-                color: Colors.white.withOpacity(0.13),
+                color: Colors.white.withValues(alpha: 0.13),
                 width: 1.2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.35),
+                  color: Colors.black.withValues(alpha: 0.35),
                   blurRadius: 24,
                   offset: const Offset(0, 8),
                 ),
