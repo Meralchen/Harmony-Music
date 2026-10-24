@@ -673,79 +673,96 @@ class SettingsScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
                     child: Container(
                       decoration: BoxDecoration(
+                        color: const Color(0xFF070B0E),
                         borderRadius: BorderRadius.circular(24),
-                        image: const DecorationImage(
-                          image: AssetImage('assets/images/branding_ambient_glow_bg.png'),
-                          fit: BoxFit.cover,
-                        ),
                         border: Border.all(
-                          color: const Color(0xFF00E5FF).withValues(alpha: 0.30),
-                          width: 1.4,
+                          color: Colors.white.withOpacity(0.08),
+                          width: 1.0,
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF00E5FF).withValues(alpha: 0.15),
-                            blurRadius: 36,
-                            spreadRadius: 2,
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Stack(
+                        children: [
+                          // Diffused ambient glow: center Alignment(0.0, -0.6), radius 0.9
+                          Positioned.fill(
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                gradient: RadialGradient(
+                                  center: Alignment(0.0, -0.6),
+                                  radius: 0.9,
+                                  colors: [
+                                    Color(0x3300E5FF),
+                                    Color(0x1500B4D8),
+                                    Colors.transparent,
+                                  ],
+                                  stops: [0.0, 0.45, 1.0],
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Foreground Content
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 18.0, vertical: 24.0),
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                final isWide = constraints.maxWidth > 640;
+                                return Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    // 1. Header Branding (Cyan Waveform + HARMONY MUSIC + Version Pill)
+                                    _buildAmbientHeroHeader(
+                                        context, settingsController),
+                                    const SizedBox(height: 20),
+
+                                    // 2. Hero Developer Glass Card (Maintainer & Signature)
+                                    _buildDualDeveloperCard(context, isWide),
+                                    const SizedBox(height: 20),
+
+                                    // 3. Bottom Cards Grid (2 columns on wide, stacked on mobile)
+                                    if (isWide)
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            flex: 5,
+                                            child:
+                                                _buildContributorsCard(context),
+                                          ),
+                                          const SizedBox(width: 14),
+                                          Expanded(
+                                            flex: 5,
+                                            child: Column(
+                                              children: [
+                                                _buildGitHubCard(context),
+                                                const SizedBox(height: 12),
+                                                _buildUpdatesCard(
+                                                    context, settingsController),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                    else
+                                      Column(
+                                        children: [
+                                          _buildContributorsCard(context),
+                                          const SizedBox(height: 12),
+                                          _buildGitHubCard(context),
+                                          const SizedBox(height: 12),
+                                          _buildUpdatesCard(
+                                              context, settingsController),
+                                        ],
+                                      ),
+                                    const SizedBox(height: 12),
+                                  ],
+                                );
+                              },
+                            ),
                           ),
                         ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(24),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 24.0),
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              final isWide = constraints.maxWidth > 640;
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  // 1. Ambient Hero Header (Waveform + HARMONY MUSIC + Version Pill)
-                                  _buildAmbientHeroHeader(context, settingsController),
-                                  const SizedBox(height: 22),
-
-                                  // 2. Dual Developer Identity Card (Whitish Frosted Glass + Maintained by NPP + Neon Cyan Signature)
-                                  _buildDualDeveloperCard(context, isWide),
-                                  const SizedBox(height: 22),
-
-                                  // 3. Modular Whitish Glass Cards (2 columns on wide / desktop, stacked on mobile)
-                                  if (isWide)
-                                    Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Expanded(
-                                          flex: 5,
-                                          child: _buildContributorsCard(context),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        Expanded(
-                                          flex: 5,
-                                          child: Column(
-                                            children: [
-                                              _buildGitHubCard(context),
-                                              const SizedBox(height: 14),
-                                              _buildUpdatesCard(context, settingsController),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    )
-                                  else
-                                    Column(
-                                      children: [
-                                        _buildContributorsCard(context),
-                                        const SizedBox(height: 14),
-                                        _buildGitHubCard(context),
-                                        const SizedBox(height: 14),
-                                        _buildUpdatesCard(context, settingsController),
-                                      ],
-                                    ),
-                                  const SizedBox(height: 8),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
                       ),
                     ),
                   ),
@@ -777,30 +794,30 @@ class SettingsScreen extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Pulsing Neon Audio Waveform with intense cyan bloom
+        // Glowing cyan audio waveform (#00F5FF) with soft glow BoxShadow
         Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF00E5FF).withValues(alpha: 0.55),
-                blurRadius: 40,
-                spreadRadius: 4,
+                color: Color(0x6600E5FF),
+                blurRadius: 30,
+                spreadRadius: 2,
               ),
             ],
           ),
           child: Image.asset(
             'assets/images/branding_waveform_cyan.png',
-            height: 64,
+            height: 52,
             fit: BoxFit.contain,
           ),
         ),
         const SizedBox(height: 14),
 
-        // HARMONY MUSIC Stencil Typography (Rafika Font) - PROMINENT & BOLD
+        // App Title: "HARMONY MUSIC"
+        // Sizing: 26sp, bold, uppercase, letter-spacing: 2.5, color: Colors.white
         SizedBox(
-          height: 38,
+          height: 32,
           child: FittedBox(
             fit: BoxFit.contain,
             child: Image.asset(
@@ -811,30 +828,23 @@ class SettingsScreen extends StatelessWidget {
         ),
         const SizedBox(height: 10),
 
-        // Ultra-clean Version Tag Pill
+        // Version Badge: "v1.24.0" inside capsule pill
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFF00E5FF).withValues(alpha: 0.14),
+            color: const Color(0x2000E5FF),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: const Color(0xFF00E5FF).withValues(alpha: 0.65),
-              width: 1.2,
+              color: const Color(0x4000E5FF),
+              width: 1,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF00E5FF).withValues(alpha: 0.25),
-                blurRadius: 10,
-                spreadRadius: 1,
-              ),
-            ],
           ),
           child: Obx(
             () => Text(
               settingsController.formattedVersion,
               style: const TextStyle(
-                color: Color(0xFF00E5FF),
-                fontSize: 12.5,
+                color: Color(0xFF00F5FF),
+                fontSize: 12,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.8,
               ),
@@ -846,131 +856,74 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildDualDeveloperCard(BuildContext context, bool isWide) {
-    final cardHeight = isWide ? 175.0 : 135.0;
-    final nppHeight = isWide ? 66.0 : 48.0;
-    final sigHeight = isWide ? 108.0 : 82.0;
-
     return Container(
-      width: double.infinity,
-      height: cardHeight,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.09),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.26),
-          width: 1.4,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF00E5FF).withValues(alpha: 0.18),
-            blurRadius: 36,
-            spreadRadius: 2,
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.40),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
+      margin: EdgeInsets.symmetric(
+        horizontal: isWide ? 16 : 0,
+        vertical: 12,
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-          child: Stack(
-            children: [
-              // Whitish frosted gradient background
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.white.withValues(alpha: 0.14),
-                      Colors.white.withValues(alpha: 0.05),
-                    ],
+          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withOpacity(0.08),
+                  Colors.white.withOpacity(0.02),
+                ],
+              ),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.14),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.4),
+                  blurRadius: 24,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            padding: EdgeInsets.symmetric(
+              horizontal: isWide ? 32 : 18,
+              vertical: isWide ? 28 : 22,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // LEFT: "Maintained by NPP" (SliceyHeallow font)
+                Flexible(
+                  flex: 5,
+                  child: Container(
+                    alignment: Alignment.centerLeft,
+                    child: Image.asset(
+                      'assets/images/branding_maintained_by_npp.png',
+                      height: isWide ? 62 : 46,
+                      fit: BoxFit.contain,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
-              ),
-
-              // Top Specular Highlight Line
-              Positioned(
-                top: 0,
-                left: 20,
-                right: 20,
-                child: Container(
-                  height: 1.5,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.transparent,
-                        const Color(0xFF00E5FF).withValues(alpha: 0.65),
-                        Colors.white.withValues(alpha: 0.85),
-                        const Color(0xFF00E5FF).withValues(alpha: 0.65),
-                        Colors.transparent,
-                      ],
+                // DO NOT put any vertical divider line between them
+                // RIGHT: "Narayan" signature (BastligaOne font, Electric Neon Cyan #00F5FF)
+                Flexible(
+                  flex: 5,
+                  child: Container(
+                    alignment: Alignment.centerRight,
+                    child: Image.asset(
+                      'assets/images/branding_signature_cyan_glow.png',
+                      height: isWide ? 95 : 74,
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ),
-              ),
-
-              // Card Contents: "Maintained by NPP" on left, "Narayan" signature on right
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Left: Maintained by NPP
-                    Expanded(
-                      flex: 5,
-                      child: Container(
-                        alignment: Alignment.center,
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        child: Image.asset(
-                          'assets/images/branding_maintained_by_npp.png',
-                          height: nppHeight,
-                          fit: BoxFit.contain,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-
-                    // Subtle vertical glass separator
-                    Container(
-                      width: 1.2,
-                      height: isWide ? 56 : 42,
-                      margin: const EdgeInsets.symmetric(horizontal: 8),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.white.withValues(alpha: 0.35),
-                            Colors.transparent,
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // Right: Narayan signature with electric cyan neon glow
-                    Expanded(
-                      flex: 5,
-                      child: Container(
-                        alignment: Alignment.center,
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        child: Image.asset(
-                          'assets/images/branding_signature_cyan_glow.png',
-                          height: sigHeight,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -978,195 +931,198 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildContributorsCard(BuildContext context) {
-    return _buildGlassCard(
-      context: context,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF00E5FF).withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: const Color(0xFF00E5FF).withValues(alpha: 0.40),
-                      width: 1,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.people_rounded,
-                    color: Color(0xFF00E5FF),
-                    size: 20,
+    return FrostedGlassBox(
+      padding: const EdgeInsets.all(20),
+      borderRadius: 22,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0x2500E5FF),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: const Color(0x5000E5FF),
+                    width: 1,
                   ),
                 ),
-                const SizedBox(width: 12),
-                const Text(
-                  "Contributors",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16.5,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Maintainer: NPP-exe (No verified icon, bold, cyan badge)
-            InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: () => launchUrl(
-                Uri.parse("https://github.com/NPP-exe"),
-                mode: LaunchMode.externalApplication,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 5.0),
-                child: Row(
-                  children: [
-                    const Text(
-                      "• ",
-                      style: TextStyle(
-                        color: Color(0xFF00E5FF),
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Text(
-                      "NPP-exe",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14.5,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    _buildRoleBadge("Maintainer", const Color(0xFF00E5FF)),
-                  ],
+                child: const Icon(
+                  Icons.people_rounded,
+                  color: Color(0xFF00F5FF),
+                  size: 20,
                 ),
               ),
-            ),
-            const SizedBox(height: 6),
-
-            // Original Creator: anandnet
-            InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: () => launchUrl(
-                Uri.parse("https://github.com/anandnet"),
-                mode: LaunchMode.externalApplication,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 5.0),
-                child: Row(
-                  children: [
-                    const Text(
-                      "• ",
-                      style: TextStyle(
-                        color: Color(0xFF00E5FF),
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Text(
-                      "anandnet",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14.5,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    _buildRoleBadge("Original Creator", const Color(0xFF00E5FF)),
-                  ],
+              const SizedBox(width: 12),
+              const Text(
+                "Contributors",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  letterSpacing: 0.3,
                 ),
               ),
-            ),
-            const SizedBox(height: 10),
+            ],
+          ),
+          const SizedBox(height: 16),
 
-            // Community Contributors & Beta Testers
-            const Row(
-              children: [
-                Text(
-                  "• ",
-                  style: TextStyle(
-                    color: Color(0xFF00E5FF),
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    "Community Contributors & Beta Testers",
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
+          // Maintainer: NPP-exe
+          InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () => launchUrl(
+              Uri.parse("https://github.com/NPP-exe"),
+              mode: LaunchMode.externalApplication,
             ),
-            const SizedBox(height: 12),
-
-            // Avatar Dots (Tooltip shows clean GitHub handle only, without role details)
-            Padding(
-              padding: const EdgeInsets.only(left: 14.0),
-              child: Wrap(
-                spacing: 10,
-                runSpacing: 10,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: Row(
                 children: [
-                  _buildAvatarDot(
-                    handle: "@BandhanPramanik",
-                    label: "BP",
-                    color: const Color(0xFF38BDF8),
-                    url: "https://github.com/BandhanPramanik",
+                  const Text(
+                    "• ",
+                    style: TextStyle(
+                      color: Color(0xFF00F5FF),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  _buildAvatarDot(
-                    handle: "@Meralchen",
-                    label: "M",
-                    color: const Color(0xFF34D399),
-                    url: "https://github.com/Meralchen",
+                  const Text(
+                    "NPP-exe",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
                   ),
-                  _buildAvatarDot(
-                    handle: "@theblackcoderbr",
-                    label: "TC",
-                    color: const Color(0xFFF59E0B),
-                    url: "https://github.com/theblackcoderbr",
-                  ),
-                  _buildAvatarDot(
-                    handle: "@jaxenisr",
-                    label: "J",
-                    color: const Color(0xFFA855F7),
-                    url: "https://github.com/jaxenisr",
-                  ),
-                  _buildAvatarDot(
-                    handle: "Community Contributors",
-                    label: "❤",
-                    color: const Color(0xFFEC4899),
-                    url: "https://github.com/NPP-exe/Harmony-Music/graphs/contributors",
-                  ),
+                  const SizedBox(width: 8),
+                  _buildRoleBadge("Maintainer", const Color(0xFF00F5FF)),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 6),
+
+          // Original Creator: anandnet
+          InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () => launchUrl(
+              Uri.parse("https://github.com/anandnet"),
+              mode: LaunchMode.externalApplication,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: Row(
+                children: [
+                  const Text(
+                    "• ",
+                    style: TextStyle(
+                      color: Color(0xFF00F5FF),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Text(
+                    "anandnet",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildRoleBadge("Original Creator", const Color(0xFF00F5FF)),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Community Contributors & Beta Testers
+          Row(
+            children: const [
+              Text(
+                "• ",
+                style: TextStyle(
+                  color: Color(0xFF00F5FF),
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  "Community Contributors & Beta Testers",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Avatar Dots
+          Padding(
+            padding: const EdgeInsets.only(left: 10.0),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _buildAvatarDot(
+                  handle: "@BandhanPramanik",
+                  label: "BP",
+                  role: "Core Contributor",
+                  color: const Color(0xFF38BDF8),
+                  url: "https://github.com/BandhanPramanik",
+                ),
+                _buildAvatarDot(
+                  handle: "@Meralchen",
+                  label: "M",
+                  role: "macOS, iOS & Web",
+                  color: const Color(0xFF34D399),
+                  url: "https://github.com/Meralchen",
+                ),
+                _buildAvatarDot(
+                  handle: "@theblackcoderbr",
+                  label: "TC",
+                  role: "Nix Packaging",
+                  color: const Color(0xFFF59E0B),
+                  url: "https://github.com/theblackcoderbr",
+                ),
+                _buildAvatarDot(
+                  handle: "@jaxenisr",
+                  label: "J",
+                  role: "Contributor",
+                  color: const Color(0xFFA855F7),
+                  url: "https://github.com/jaxenisr",
+                ),
+                _buildAvatarDot(
+                  handle: "Community",
+                  label: "❤",
+                  role: "Translators & Testers",
+                  color: const Color(0xFFEC4899),
+                  url: "https://github.com/NPP-exe/Harmony-Music/graphs/contributors",
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildGitHubCard(BuildContext context) {
-    return _buildGlassCard(
-      context: context,
+    return FrostedGlassBox(
+      padding: EdgeInsets.zero,
+      borderRadius: 22,
       child: Material(
         type: MaterialType.transparency,
         child: InkWell(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(22),
           onTap: () => launchUrl(
             Uri.parse(appGithubUrl),
             mode: LaunchMode.externalApplication,
@@ -1179,10 +1135,10 @@ class SettingsScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.12),
+                    color: Colors.white.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.20),
+                      color: Colors.white.withOpacity(0.14),
                       width: 1,
                     ),
                   ),
@@ -1192,7 +1148,7 @@ class SettingsScreen extends StatelessWidget {
                     size: 24,
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1212,7 +1168,7 @@ class SettingsScreen extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.65),
+                          color: Colors.white.withOpacity(0.55),
                           fontSize: 12,
                         ),
                       ),
@@ -1222,7 +1178,7 @@ class SettingsScreen extends StatelessWidget {
                 Icon(
                   Icons.open_in_new_rounded,
                   size: 20,
-                  color: Colors.white.withValues(alpha: 0.6),
+                  color: Colors.white.withOpacity(0.4),
                 ),
               ],
             ),
@@ -1234,12 +1190,13 @@ class SettingsScreen extends StatelessWidget {
 
   Widget _buildUpdatesCard(
       BuildContext context, SettingsScreenController settingsController) {
-    return _buildGlassCard(
-      context: context,
+    return FrostedGlassBox(
+      padding: EdgeInsets.zero,
+      borderRadius: 22,
       child: Material(
         type: MaterialType.transparency,
         child: InkWell(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(22),
           onTap: () async {
             final info = await settingsController.manualCheckNewVersion();
             if (info.isAvailable) {
@@ -1269,10 +1226,10 @@ class SettingsScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withValues(alpha: 0.22),
+                    color: const Color(0xFF10B981).withOpacity(0.20),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: const Color(0xFF10B981).withValues(alpha: 0.45),
+                      color: const Color(0xFF10B981).withOpacity(0.4),
                       width: 1,
                     ),
                   ),
@@ -1282,7 +1239,7 @@ class SettingsScreen extends StatelessWidget {
                     size: 24,
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1307,7 +1264,7 @@ class SettingsScreen extends StatelessWidget {
                           style: TextStyle(
                             color: settingsController.isNewVersionAvailable.value
                                 ? Colors.amber[300]
-                                : Colors.white.withValues(alpha: 0.65),
+                                : Colors.white.withOpacity(0.55),
                             fontSize: 12,
                           ),
                         ),
@@ -1315,10 +1272,10 @@ class SettingsScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.auto_awesome,
                   size: 20,
-                  color: Color(0xFF00E5FF),
+                  color: const Color(0xFF00F5FF).withOpacity(0.7),
                 ),
               ],
             ),
@@ -1328,90 +1285,20 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildGlassCard({required BuildContext context, required Widget child}) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.22),
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: const Color(0xFF00E5FF).withValues(alpha: 0.08),
-            blurRadius: 20,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Stack(
-            children: [
-              // Frosted gradient overlay
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.white.withValues(alpha: 0.08),
-                      Colors.white.withValues(alpha: 0.03),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Top Specular Highlight Line
-              Positioned(
-                top: 0,
-                left: 20,
-                right: 20,
-                child: Container(
-                  height: 1.2,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.transparent,
-                        const Color(0xFF00E5FF).withValues(alpha: 0.5),
-                        Colors.white.withValues(alpha: 0.7),
-                        const Color(0xFF00E5FF).withValues(alpha: 0.5),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              child,
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildRoleBadge(String title, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2.5),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(14),
+        color: color.withOpacity(0.18),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: color.withValues(alpha: 0.70),
-          width: 1.1,
+          color: color.withOpacity(0.65),
+          width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.30),
-            blurRadius: 10,
+            color: color.withOpacity(0.3),
+            blurRadius: 8,
             spreadRadius: 0,
           ),
         ],
@@ -1422,7 +1309,7 @@ class SettingsScreen extends StatelessWidget {
           color: color,
           fontWeight: FontWeight.bold,
           fontSize: 11,
-          letterSpacing: 0.4,
+          letterSpacing: 0.3,
         ),
       ),
     );
@@ -1431,11 +1318,12 @@ class SettingsScreen extends StatelessWidget {
   Widget _buildAvatarDot({
     required String handle,
     required String label,
+    required String role,
     required Color color,
     required String url,
   }) {
     return Tooltip(
-      message: handle,
+      message: "$handle • $role",
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () => launchUrl(
@@ -1443,19 +1331,19 @@ class SettingsScreen extends StatelessWidget {
           mode: LaunchMode.externalApplication,
         ),
         child: Container(
-          width: 32,
-          height: 32,
+          width: 30,
+          height: 30,
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.90),
+            color: color.withOpacity(0.85),
             shape: BoxShape.circle,
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.40),
-              width: 1.2,
+              color: Colors.white.withOpacity(0.35),
+              width: 1.0,
             ),
             boxShadow: [
               BoxShadow(
-                color: color.withValues(alpha: 0.45),
-                blurRadius: 8,
+                color: color.withOpacity(0.35),
+                blurRadius: 6,
                 spreadRadius: 1,
               ),
             ],
@@ -1473,8 +1361,68 @@ class SettingsScreen extends StatelessWidget {
       ),
     );
   }
-
 }
+
+class FrostedGlassBox extends StatelessWidget {
+  final Widget child;
+  final double? width;
+  final double? height;
+  final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry? margin;
+  final double borderRadius;
+
+  const FrostedGlassBox({
+    super.key,
+    required this.child,
+    this.width,
+    this.height,
+    this.padding = const EdgeInsets.all(20),
+    this.margin,
+    this.borderRadius = 22,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: margin,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            width: width,
+            height: height,
+            padding: padding,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(borderRadius),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withOpacity(0.09),
+                  Colors.white.withOpacity(0.02),
+                ],
+              ),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.13),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.35),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 
 class ThemeSelectorDialog extends StatelessWidget {
   const ThemeSelectorDialog({super.key});
