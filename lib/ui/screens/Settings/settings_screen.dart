@@ -1066,8 +1066,8 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 8),
 
           // Community Contributors & Beta Testers
-          Row(
-            children: const [
+          const Row(
+            children: [
               Text(
                 "• ",
                 style: TextStyle(
