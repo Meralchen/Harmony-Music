@@ -679,12 +679,12 @@ class SettingsScreen extends StatelessWidget {
                           fit: BoxFit.cover,
                         ),
                         border: Border.all(
-                          color: const Color(0xFF00E5FF).withOpacity(0.30),
+                          color: const Color(0xFF00E5FF).withValues(alpha: 0.30),
                           width: 1.4,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF00E5FF).withOpacity(0.15),
+                            color: const Color(0xFF00E5FF).withValues(alpha: 0.15),
                             blurRadius: 36,
                             spreadRadius: 2,
                           ),
@@ -784,7 +784,7 @@ class SettingsScreen extends StatelessWidget {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF00E5FF).withOpacity(0.55),
+                color: const Color(0xFF00E5FF).withValues(alpha: 0.55),
                 blurRadius: 40,
                 spreadRadius: 4,
               ),
@@ -815,15 +815,15 @@ class SettingsScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFF00E5FF).withOpacity(0.14),
+            color: const Color(0xFF00E5FF).withValues(alpha: 0.14),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: const Color(0xFF00E5FF).withOpacity(0.65),
+              color: const Color(0xFF00E5FF).withValues(alpha: 0.65),
               width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF00E5FF).withOpacity(0.25),
+                color: const Color(0xFF00E5FF).withValues(alpha: 0.25),
                 blurRadius: 10,
                 spreadRadius: 1,
               ),
@@ -854,20 +854,20 @@ class SettingsScreen extends StatelessWidget {
       width: double.infinity,
       height: cardHeight,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.09),
+        color: Colors.white.withValues(alpha: 0.09),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withOpacity(0.26),
+          color: Colors.white.withValues(alpha: 0.26),
           width: 1.4,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF00E5FF).withOpacity(0.18),
+            color: const Color(0xFF00E5FF).withValues(alpha: 0.18),
             blurRadius: 36,
             spreadRadius: 2,
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.40),
+            color: Colors.black.withValues(alpha: 0.40),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
@@ -886,8 +886,8 @@ class SettingsScreen extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Colors.white.withOpacity(0.14),
-                      Colors.white.withOpacity(0.05),
+                      Colors.white.withValues(alpha: 0.14),
+                      Colors.white.withValues(alpha: 0.05),
                     ],
                   ),
                 ),
@@ -904,9 +904,9 @@ class SettingsScreen extends StatelessWidget {
                     gradient: LinearGradient(
                       colors: [
                         Colors.transparent,
-                        const Color(0xFF00E5FF).withOpacity(0.65),
-                        Colors.white.withOpacity(0.85),
-                        const Color(0xFF00E5FF).withOpacity(0.65),
+                        const Color(0xFF00E5FF).withValues(alpha: 0.65),
+                        Colors.white.withValues(alpha: 0.85),
+                        const Color(0xFF00E5FF).withValues(alpha: 0.65),
                         Colors.transparent,
                       ],
                     ),
@@ -947,7 +947,7 @@ class SettingsScreen extends StatelessWidget {
                           end: Alignment.bottomCenter,
                           colors: [
                             Colors.transparent,
-                            Colors.white.withOpacity(0.35),
+                            Colors.white.withValues(alpha: 0.35),
                             Colors.transparent,
                           ],
                         ),
@@ -992,10 +992,10 @@ class SettingsScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF00E5FF).withOpacity(0.18),
+                    color: const Color(0xFF00E5FF).withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: const Color(0xFF00E5FF).withOpacity(0.40),
+                      color: const Color(0xFF00E5FF).withValues(alpha: 0.40),
                       width: 1,
                     ),
                   ),
@@ -1090,8 +1090,8 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: 10),
 
             // Community Contributors & Beta Testers
-            Row(
-              children: const [
+            const Row(
+              children: [
                 Text(
                   "• ",
                   style: TextStyle(
@@ -1179,10 +1179,10 @@ class SettingsScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.12),
+                    color: Colors.white.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.20),
+                      color: Colors.white.withValues(alpha: 0.20),
                       width: 1,
                     ),
                   ),
@@ -1212,7 +1212,7 @@ class SettingsScreen extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.65),
+                          color: Colors.white.withValues(alpha: 0.65),
                           fontSize: 12,
                         ),
                       ),
@@ -1222,7 +1222,7 @@ class SettingsScreen extends StatelessWidget {
                 Icon(
                   Icons.open_in_new_rounded,
                   size: 20,
-                  color: Colors.white.withOpacity(0.6),
+                  color: Colors.white.withValues(alpha: 0.6),
                 ),
               ],
             ),
@@ -1269,10 +1269,10 @@ class SettingsScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withOpacity(0.22),
+                    color: const Color(0xFF10B981).withValues(alpha: 0.22),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: const Color(0xFF10B981).withOpacity(0.45),
+                      color: const Color(0xFF10B981).withValues(alpha: 0.45),
                       width: 1,
                     ),
                   ),
@@ -1307,7 +1307,7 @@ class SettingsScreen extends StatelessWidget {
                           style: TextStyle(
                             color: settingsController.isNewVersionAvailable.value
                                 ? Colors.amber[300]
-                                : Colors.white.withOpacity(0.65),
+                                : Colors.white.withValues(alpha: 0.65),
                             fontSize: 12,
                           ),
                         ),
@@ -1331,20 +1331,20 @@ class SettingsScreen extends StatelessWidget {
   Widget _buildGlassCard({required BuildContext context, required Widget child}) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withOpacity(0.22),
+          color: Colors.white.withValues(alpha: 0.22),
           width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.35),
+            color: Colors.black.withValues(alpha: 0.35),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
           BoxShadow(
-            color: const Color(0xFF00E5FF).withOpacity(0.08),
+            color: const Color(0xFF00E5FF).withValues(alpha: 0.08),
             blurRadius: 20,
             spreadRadius: 1,
           ),
@@ -1363,8 +1363,8 @@ class SettingsScreen extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Colors.white.withOpacity(0.08),
-                      Colors.white.withOpacity(0.03),
+                      Colors.white.withValues(alpha: 0.08),
+                      Colors.white.withValues(alpha: 0.03),
                     ],
                   ),
                 ),
@@ -1381,9 +1381,9 @@ class SettingsScreen extends StatelessWidget {
                     gradient: LinearGradient(
                       colors: [
                         Colors.transparent,
-                        const Color(0xFF00E5FF).withOpacity(0.5),
-                        Colors.white.withOpacity(0.7),
-                        const Color(0xFF00E5FF).withOpacity(0.5),
+                        const Color(0xFF00E5FF).withValues(alpha: 0.5),
+                        Colors.white.withValues(alpha: 0.7),
+                        const Color(0xFF00E5FF).withValues(alpha: 0.5),
                         Colors.transparent,
                       ],
                     ),
@@ -1402,15 +1402,15 @@ class SettingsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.18),
+        color: color.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: color.withOpacity(0.70),
+          color: color.withValues(alpha: 0.70),
           width: 1.1,
         ),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.30),
+            color: color.withValues(alpha: 0.30),
             blurRadius: 10,
             spreadRadius: 0,
           ),
@@ -1446,15 +1446,15 @@ class SettingsScreen extends StatelessWidget {
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.90),
+            color: color.withValues(alpha: 0.90),
             shape: BoxShape.circle,
             border: Border.all(
-              color: Colors.white.withOpacity(0.40),
+              color: Colors.white.withValues(alpha: 0.40),
               width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: color.withOpacity(0.45),
+                color: color.withValues(alpha: 0.45),
                 blurRadius: 8,
                 spreadRadius: 1,
               ),
