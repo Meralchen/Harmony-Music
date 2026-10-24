@@ -1070,16 +1070,16 @@ class SettingsScreen extends StatelessWidget {
             children: const [
               Text(
                 "• ",
-                style: TextStyle(
+                style: const TextStyle(
                   color: Color(0xFF00E5FF),
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               Expanded(
-                child: Text(
+                child: const Text(
                   "Community Contributors & Beta Testers",
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 12.5,
                     fontWeight: FontWeight.w500,
