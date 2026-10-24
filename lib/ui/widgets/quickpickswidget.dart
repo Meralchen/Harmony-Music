@@ -25,7 +25,7 @@ class QuickPicksWidget extends StatelessWidget {
           Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                content.title.toLowerCase().removeAllWhitespace.tr,
+                _formatTitle(content.title),
                 style: Theme.of(context).textTheme.titleLarge,
               )),
           const SizedBox(height: 10),
@@ -136,4 +136,18 @@ class QuickPicksWidget extends StatelessWidget {
       ),
     );
   }
+
+  String _formatTitle(String title) {
+    final key = title.toLowerCase().removeAllWhitespace;
+    if (key == 'similarsongs') {
+      return 'similarSongs'.tr.isNotEmpty && 'similarSongs'.tr != 'similarSongs'
+          ? 'similarSongs'.tr
+          : 'Similar Songs';
+    }
+    if (key == 'quickpicks') {
+      return 'quickpicks'.tr;
+    }
+    return title;
+  }
+
 }

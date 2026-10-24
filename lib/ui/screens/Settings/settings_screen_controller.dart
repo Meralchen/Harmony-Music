@@ -52,6 +52,7 @@ class SettingsScreenController extends GetxController {
   final cacheHomeScreenData = true.obs;
   final _currentVersion = "v1.24.0".obs;
   String get currentVersion => _currentVersion.value;
+  String get formattedVersion => _currentVersion.value.startsWith('v') ? _currentVersion.value : 'v' + _currentVersion.value;
   final latestVersion = "".obs;
   final releaseNotes = "".obs;
   final releaseUrl = appReleasesUrl.obs;

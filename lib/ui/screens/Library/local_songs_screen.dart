@@ -33,62 +33,116 @@ class LocalSongsView extends StatelessWidget {
 
     return Column(
       children: [
-        // Search bar & Action Buttons
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 42,
-                  child: TextField(
-                    controller: controller.searchController,
-                    onChanged: controller.onSearch,
-                    decoration: InputDecoration(
-                      hintText: 'Search local songs...',
-                      hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.color
-                                ?.withAlpha(128),
+        // Search bar or Selection Action Bar
+        Obx(() {
+          if (controller.isSelectionMode.value) {
+            final allSelected = controller.selectedSongIds.length ==
+                    controller.filteredSongsList.length &&
+                controller.filteredSongsList.isNotEmpty;
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.secondary,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 20),
+                    tooltip: 'Cancel selection',
+                    onPressed: controller.clearSelection,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      '${controller.selectedSongIds.length} selected',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
                           ),
-                      prefixIcon: const Icon(Icons.search, size: 20),
-                      suffixIcon: Obx(
-                        () => controller.searchQuery.value.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear, size: 18),
-                                onPressed: controller.clearSearch,
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                          vertical: 0, horizontal: 12),
-                      filled: true,
-                      fillColor: Theme.of(context).colorScheme.secondary,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      allSelected ? Icons.deselect : Icons.select_all,
+                      size: 20,
+                    ),
+                    tooltip: allSelected ? 'Deselect all' : 'Select all',
+                    onPressed: () {
+                      if (allSelected) {
+                        controller.clearSelection();
+                      } else {
+                        controller.selectAll();
+                      }
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline,
+                        color: Colors.redAccent, size: 20),
+                    tooltip: 'Remove selected',
+                    onPressed: () => _confirmBatchDelete(context, controller),
+                  ),
+                ],
+              ),
+            );
+          }
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 42,
+                    child: TextField(
+                      controller: controller.searchController,
+                      onChanged: controller.onSearch,
+                      decoration: InputDecoration(
+                        hintText: 'Search local songs...',
+                        hintStyle:
+                            Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.color
+                                      ?.withAlpha(128),
+                                ),
+                        prefixIcon: const Icon(Icons.search, size: 20),
+                        suffixIcon: Obx(
+                          () => controller.searchQuery.value.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear, size: 18),
+                                  onPressed: controller.clearSearch,
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 0, horizontal: 12),
+                        filled: true,
+                        fillColor: Theme.of(context).colorScheme.secondary,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              IconButton.filledTonal(
-                tooltip: 'Add folder',
-                icon: const Icon(Icons.create_new_folder, size: 20),
-                onPressed: controller.pickAndAddFolder,
-              ),
-              const SizedBox(width: 6),
-              IconButton.filledTonal(
-                tooltip: 'Add files',
-                icon: const Icon(Icons.add, size: 20),
-                onPressed: controller.pickAndAddFiles,
-              ),
-            ],
-          ),
-        ),
+                const SizedBox(width: 8),
+                IconButton.filledTonal(
+                  tooltip: 'Add folder',
+                  icon: const Icon(Icons.create_new_folder, size: 20),
+                  onPressed: controller.pickAndAddFolder,
+                ),
+                const SizedBox(width: 6),
+                IconButton.filledTonal(
+                  tooltip: 'Add files',
+                  icon: const Icon(Icons.add, size: 20),
+                  onPressed: controller.pickAndAddFiles,
+                ),
+              ],
+            ),
+          );
+        }),
 
         // Scanning progress bar
         Obx(
@@ -202,14 +256,32 @@ class LocalSongsView extends StatelessWidget {
               itemCount: controller.filteredSongsList.length,
               itemBuilder: (context, index) {
                 final song = controller.filteredSongsList[index];
-                return _LocalSongTile(
-                  song: song,
-                  onTap: () {
-                    playerController.playLocalSong(
-                        song, controller.filteredSongsList.toList());
-                  },
-                  onDelete: () => controller.removeSong(song),
-                );
+                return Obx(() {
+                  final isSelected =
+                      controller.selectedSongIds.contains(song.id);
+                  final isSelectionMode = controller.isSelectionMode.value;
+                  return _LocalSongTile(
+                    song: song,
+                    isSelected: isSelected,
+                    isSelectionMode: isSelectionMode,
+                    onTap: () {
+                      if (isSelectionMode) {
+                        controller.toggleSelection(song.id);
+                      } else {
+                        playerController.playLocalSong(
+                            song, controller.filteredSongsList.toList());
+                      }
+                    },
+                    onLongPress: () {
+                      if (!isSelectionMode) {
+                        controller.enterSelectionMode(song.id);
+                      } else {
+                        controller.toggleSelection(song.id);
+                      }
+                    },
+                    onDelete: () => controller.removeSong(song),
+                  );
+                });
               },
             );
           }),
@@ -217,26 +289,72 @@ class LocalSongsView extends StatelessWidget {
       ],
     );
   }
+
+  void _confirmBatchDelete(
+      BuildContext context, LocalSongsController controller) {
+    final count = controller.selectedSongIds.length;
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('Remove from Local Music'),
+        content: Text(
+          'Remove $count selected song${count == 1 ? '' : 's'} from your local music list?\n\n(Audio files on your device will remain intact.)',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: () {
+              Navigator.of(dialogCtx).pop();
+              controller.removeSelectedSongs();
+            },
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _LocalSongTile extends StatelessWidget {
   final MediaItem song;
+  final bool isSelected;
+  final bool isSelectionMode;
   final VoidCallback onTap;
+  final VoidCallback onLongPress;
   final VoidCallback onDelete;
 
   const _LocalSongTile({
     required this.song,
+    this.isSelected = false,
+    this.isSelectionMode = false,
     required this.onTap,
+    required this.onLongPress,
     required this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: ImageWidget(
-        song: song,
-        size: 48,
-      ),
+      selected: isSelected,
+      selectedTileColor: Theme.of(context).colorScheme.primary.withAlpha(25),
+      leading: isSelectionMode
+          ? Checkbox(
+              value: isSelected,
+              onChanged: (_) => onTap(),
+              activeColor: Theme.of(context).colorScheme.primary,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4)),
+            )
+          : ImageWidget(
+              song: song,
+              size: 48,
+            ),
       title: Text(
         song.title,
         maxLines: 1,
@@ -255,39 +373,42 @@ class _LocalSongTile extends StatelessWidget {
                   ?.withAlpha(180),
             ),
       ),
-      trailing: PopupMenuButton<String>(
-        icon: const Icon(Icons.more_vert),
-        onSelected: (value) {
-          if (value == 'play') {
-            onTap();
-          } else if (value == 'delete') {
-            onDelete();
-          }
-        },
-        itemBuilder: (context) => [
-          const PopupMenuItem(
-            value: 'play',
-            child: Row(
-              children: [
-                Icon(Icons.play_arrow, size: 20),
-                SizedBox(width: 8),
-                Text('Play'),
+      trailing: isSelectionMode
+          ? null
+          : PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              onSelected: (value) {
+                if (value == 'play') {
+                  onTap();
+                } else if (value == 'delete') {
+                  onDelete();
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'play',
+                  child: Row(
+                    children: [
+                      Icon(Icons.play_arrow, size: 20),
+                      SizedBox(width: 8),
+                      Text('Play'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_outline, size: 20),
+                      SizedBox(width: 8),
+                      Text('Remove from local'),
+                    ],
+                  ),
+                ),
               ],
             ),
-          ),
-          const PopupMenuItem(
-            value: 'delete',
-            child: Row(
-              children: [
-                Icon(Icons.delete_outline, size: 20),
-                SizedBox(width: 8),
-                Text('Remove from local'),
-              ],
-            ),
-          ),
-        ],
-      ),
       onTap: onTap,
+      onLongPress: onLongPress,
     );
   }
 }

@@ -675,7 +675,7 @@ class SettingsScreen extends StatelessWidget {
                       children: [
                         // Hero Showcase Card
                         Container(
-                          padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 20.0),
+                          padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
@@ -717,14 +717,21 @@ class SettingsScreen extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 14),
-                              Text(
-                                "Harmony Music",
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.5,
+
+                              // App Name in Rafika Font
+                              SizedBox(
+                                height: 30,
+                                child: FittedBox(
+                                  fit: BoxFit.contain,
+                                  child: Image.asset(
+                                    'assets/images/branding_harmony_music.png',
+                                    color: Theme.of(context).textTheme.titleLarge?.color ?? Colors.white,
+                                  ),
                                 ),
                               ),
-                              const SizedBox(height: 6),
+                              const SizedBox(height: 8),
+
+                              // Version Pill
                               Obx(
                                 () => Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
@@ -733,7 +740,7 @@ class SettingsScreen extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
-                                    "v${settingsController.currentVersion}",
+                                    settingsController.formattedVersion,
                                     style: TextStyle(
                                       fontSize: 12.5,
                                       fontWeight: FontWeight.w600,
@@ -742,31 +749,45 @@ class SettingsScreen extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 12),
-                              // Maintainer Pill
+                              const SizedBox(height: 16),
+
+                              // Maintainer Showcase Card (Slicey Heallow + Bastliga One signature)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                 decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Theme.of(context).colorScheme.primary.withAlpha(64),
-                                      Theme.of(context).colorScheme.secondary.withAlpha(64),
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(20),
+                                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(70),
+                                  borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: Theme.of(context).colorScheme.primary.withAlpha(153),
-                                    width: 1.5,
+                                    color: Theme.of(context).colorScheme.primary.withAlpha(90),
+                                    width: 1.2,
                                   ),
                                 ),
-                                child: Text(
-                                  "Maintained by NARAYAN",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 1.5,
-                                    color: Theme.of(context).textTheme.titleMedium?.color ?? Colors.white,
-                                  ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SizedBox(
+                                      height: 24,
+                                      child: FittedBox(
+                                        fit: BoxFit.contain,
+                                        child: Image.asset(
+                                          'assets/images/branding_maintained_by_npp.png',
+                                          color: Theme.of(context).colorScheme.primary,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    SizedBox(
+                                      height: 42,
+                                      child: FittedBox(
+                                        fit: BoxFit.contain,
+                                        child: Image.asset(
+                                          'assets/images/branding_signature_narayan.png',
+                                          color: Theme.of(context).colorScheme.primary,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
@@ -801,7 +822,7 @@ class SettingsScreen extends StatelessWidget {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     snackbar(
                                       context,
-                                      "You are on the latest version (${settingsController.currentVersion})",
+                                      "You are on the latest version (${settingsController.formattedVersion})",
                                       size: SanckBarSize.MEDIUM,
                                     ),
                                   );
@@ -937,6 +958,87 @@ class SettingsScreen extends StatelessWidget {
                             ),
                           ),
                         ),
+                        const SizedBox(height: 10),
+
+                        // Action 3: Contributors Showcase Card
+                        Card(
+                          elevation: 0,
+                          color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(100),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: BorderSide(
+                              color: Theme.of(context).dividerColor.withAlpha(30),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context).colorScheme.primary.withAlpha(35),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Icon(
+                                        Icons.group_rounded,
+                                        color: Theme.of(context).colorScheme.primary,
+                                        size: 20,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      "Contributors",
+                                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                Divider(
+                                  height: 1,
+                                  color: Theme.of(context).dividerColor.withAlpha(30),
+                                ),
+                                const SizedBox(height: 8),
+                                _buildContributorItem(
+                                  context: context,
+                                  name: "@anandnet",
+                                  role: "Original Creator",
+                                  url: "https://github.com/anandnet",
+                                ),
+                                _buildContributorItem(
+                                  context: context,
+                                  name: "@BandhanPramanik",
+                                  role: "Core Contributor",
+                                  url: "https://github.com/BandhanPramanik",
+                                ),
+                                _buildContributorItem(
+                                  context: context,
+                                  name: "@Meralchen",
+                                  role: "macOS, iOS & Web Support",
+                                  url: "https://github.com/Meralchen",
+                                ),
+                                _buildContributorItem(
+                                  context: context,
+                                  name: "@theblackcoderbr",
+                                  role: "Nix Packaging",
+                                  url: "https://github.com/theblackcoderbr",
+                                ),
+                                _buildContributorItem(
+                                  context: context,
+                                  name: "@jaxenisr",
+                                  role: "Contributor",
+                                  url: "https://github.com/jaxenisr",
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                         const SizedBox(height: 8),
                       ],
                     ),
@@ -950,7 +1052,7 @@ class SettingsScreen extends StatelessWidget {
             child: Center(
               child: Obx(
                 () => Text(
-                  "Harmony Music v${settingsController.currentVersion} • $appGithubUser",
+                  "Harmony Music ${settingsController.formattedVersion} • $appGithubUser",
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).textTheme.bodySmall?.color?.withAlpha(120),
                     letterSpacing: 0.5,
@@ -963,6 +1065,53 @@ class SettingsScreen extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildContributorItem({
+    required BuildContext context,
+    required String name,
+    required String role,
+    required String url,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 4.0),
+        child: Row(
+          children: [
+            Expanded(
+              child: RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: name,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    TextSpan(
+                      text: "  ($role)",
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).textTheme.bodySmall?.color?.withAlpha(160),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Icon(
+              Icons.open_in_new_rounded,
+              size: 15,
+              color: Theme.of(context).iconTheme.color?.withAlpha(100),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 }
 
 class ThemeSelectorDialog extends StatelessWidget {

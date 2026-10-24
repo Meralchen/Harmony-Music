@@ -39,6 +39,8 @@ class SongInfoBottomSheet extends StatelessWidget {
     final songInfoController =
         Get.put(SongInfoController(song, calledFromPlayer));
     final playerController = Get.find<PlayerController>();
+    final isLocalSong =
+        song.id.startsWith('local_') || song.extras?['isLocal'] == true;
     return Padding(
       padding: EdgeInsets.only(bottom: Get.mediaQuery.padding.bottom),
       child: SingleChildScrollView(
@@ -58,7 +60,7 @@ class SongInfoBottomSheet extends StatelessWidget {
               ),
               subtitle: Text(song.artist!),
               trailing: SizedBox(
-                width: 110,
+                width: isLocalSong ? 50 : 110,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -88,11 +90,12 @@ class SongInfoBottomSheet extends StatelessWidget {
                                       .titleMedium!
                                       .color,
                                 ))),
-                    SongDownloadButton(
-                      song_: song,
-                      isDownloadingDoneCallback:
-                          songInfoController.setDownloadStatus,
-                    )
+                    if (!isLocalSong)
+                      SongDownloadButton(
+                        song_: song,
+                        isDownloadingDoneCallback:
+                            songInfoController.setDownloadStatus,
+                      )
                   ],
                 ),
               ),
@@ -149,12 +152,22 @@ class SongInfoBottomSheet extends StatelessWidget {
                       Navigator.of(context).pop();
                     },
                   ),
-            song.extras!['album'] != null
+            (song.extras?['album'] != null ||
+                    (isLocalSong &&
+                        playerController
+                                .getResolvedOnlineSong(song.id)
+                                ?.extras?['album'] !=
+                            null))
                 ? ListTile(
                     visualDensity: const VisualDensity(vertical: -1),
                     leading: const Icon(Icons.album),
                     title: Text("goToAlbum".tr),
                     onTap: () {
+                      final albumId = song.extras?['album']?['id'] ??
+                          playerController
+                              .getResolvedOnlineSong(song.id)
+                              ?.extras?['album']?['id'];
+                      if (albumId == null) return;
                       Navigator.of(context).pop();
                       if (calledFromPlayer) {
                         playerController.playerPanelController.close();
@@ -164,7 +177,7 @@ class SongInfoBottomSheet extends StatelessWidget {
                       }
                       Get.toNamed(ScreenNavigationSetup.albumScreen,
                           id: ScreenNavigationSetup.id,
-                          arguments: (null, song.extras!['album']['id']));
+                          arguments: (null, albumId));
                     },
                   )
                 : const SizedBox.shrink(),
@@ -249,9 +262,23 @@ class SongInfoBottomSheet extends StatelessWidget {
               visualDensity: const VisualDensity(vertical: -1),
               leading: const Icon(Ionicons.logo_youtube),
               title: Text("openInYt".tr),
-              onTap: () {
+              onTap: () async {
+                String url;
+                if (isLocalSong) {
+                  final resolved =
+                      await playerController.resolveOnlineSong(song);
+                  if (resolved != null) {
+                    url = "https://youtube.com/watch?v=${resolved.id}";
+                  } else {
+                    final query = Uri.encodeComponent(
+                        "${song.artist ?? ''} ${song.title}".trim());
+                    url = "https://youtube.com/results?search_query=$query";
+                  }
+                } else {
+                  url = "https://youtube.com/watch?v=${song.id}";
+                }
                 launchUrl(
-                  Uri.parse("https://youtube.com/watch?v=${song.id}"),
+                  Uri.parse(url),
                   mode: LaunchMode.externalApplication,
                 );
               },
@@ -260,9 +287,23 @@ class SongInfoBottomSheet extends StatelessWidget {
               visualDensity: const VisualDensity(vertical: -1),
               leading: const Icon(Ionicons.play_circle),
               title: Text("openInYtMusic".tr),
-              onTap: () {
+              onTap: () async {
+                String url;
+                if (isLocalSong) {
+                  final resolved =
+                      await playerController.resolveOnlineSong(song);
+                  if (resolved != null) {
+                    url = "https://music.youtube.com/watch?v=${resolved.id}";
+                  } else {
+                    final query = Uri.encodeComponent(
+                        "${song.artist ?? ''} ${song.title}".trim());
+                    url = "https://music.youtube.com/search?q=$query";
+                  }
+                } else {
+                  url = "https://music.youtube.com/watch?v=${song.id}";
+                }
                 launchUrl(
-                  Uri.parse("https://music.youtube.com/watch?v=${song.id}"),
+                  Uri.parse(url),
                   mode: LaunchMode.externalApplication,
                 );
               },
@@ -294,8 +335,23 @@ class SongInfoBottomSheet extends StatelessWidget {
               visualDensity: const VisualDensity(vertical: -1),
               leading: const Icon(Icons.share),
               title: Text("shareSong".tr),
-              onTap: () =>
-                  Share.share("https://youtube.com/watch?v=${song.id}"),
+              onTap: () async {
+                String url;
+                if (isLocalSong) {
+                  final resolved =
+                      await playerController.resolveOnlineSong(song);
+                  if (resolved != null) {
+                    url = "https://youtube.com/watch?v=${resolved.id}";
+                  } else {
+                    final query = Uri.encodeComponent(
+                        "${song.artist ?? ''} ${song.title}".trim());
+                    url = "https://youtube.com/results?search_query=$query";
+                  }
+                } else {
+                  url = "https://youtube.com/watch?v=${song.id}";
+                }
+                Share.share(url);
+              },
             ),
           ],
         ),
@@ -305,10 +361,19 @@ class SongInfoBottomSheet extends StatelessWidget {
 
   List<Widget> artistWidgetList(MediaItem song, BuildContext context) {
     final artistList = [];
-    final artists = song.extras!['artists'];
+    dynamic artists = song.extras?['artists'];
+    if (artists == null && song.id.startsWith('local_')) {
+      final resolved =
+          Get.find<PlayerController>().getResolvedOnlineSong(song.id);
+      if (resolved != null) {
+        artists = resolved.extras?['artists'];
+      }
+    }
     if (artists != null) {
       for (dynamic each in artists) {
-        if (each.containsKey("id") && each['id'] != null) artistList.add(each);
+        if (each is Map && each.containsKey("id") && each['id'] != null) {
+          artistList.add(each);
+        }
       }
     }
     return artistList.isNotEmpty

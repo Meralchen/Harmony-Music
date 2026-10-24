@@ -236,12 +236,38 @@ class Body extends StatelessWidget {
                     width: constraints.maxWidth > 800
                         ? 800
                         : constraints.maxWidth - 40,
-                    child: const Padding(
-                        padding: EdgeInsets.only(top: 15.0),
-                        child: DesktopSearchBar()),
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 15.0),
+                      child: Row(
+                        children: [
+                          const Expanded(child: DesktopSearchBar()),
+                          const SizedBox(width: 8),
+                          IconButton.filledTonal(
+                            tooltip: 'Reload Home',
+                            icon: const Icon(Icons.refresh, size: 20),
+                            onPressed: () =>
+                                homeScreenController.reloadHomeScreen(),
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 }),
-              )
+              ),
+            if (!GetPlatform.isDesktop)
+              Positioned(
+                top: context.isLandscape ? 10.0 : 38.0,
+                right: 15.0,
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: IconButton.filledTonal(
+                    tooltip: 'Reload Home',
+                    icon: const Icon(Icons.refresh, size: 20),
+                    onPressed: () =>
+                        homeScreenController.reloadHomeScreen(),
+                  ),
+                ),
+              ),
           ],
         ),
       );

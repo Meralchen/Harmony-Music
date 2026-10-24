@@ -516,6 +516,62 @@ class PlayerController extends GetxController
 
   /// Play a local audio file. Sets the queue to the full localSongs list and
   /// plays starting at [index]. Local files do not use the YouTube stream fetcher.
+  final Map<String, MediaItem> _resolvedOnlineItems = {};
+
+  MediaItem? getResolvedOnlineSong(String songId) =>
+      _resolvedOnlineItems[songId];
+
+  Future<MediaItem?> resolveOnlineSong(MediaItem song) async {
+    if (!song.id.startsWith('local_')) {
+      return song;
+    }
+    if (_resolvedOnlineItems.containsKey(song.id)) {
+      return _resolvedOnlineItems[song.id];
+    }
+    try {
+      final artist = (song.artist != null && song.artist != 'Unknown Artist')
+          ? song.artist!
+          : '';
+      final query = "$artist ${song.title}".trim();
+      if (query.isEmpty) return null;
+
+      final searchResult =
+          await _musicServices.search(query, filter: 'songs');
+      final songs = searchResult['Songs'] ??
+          searchResult['songs'] ??
+          searchResult['Top result'];
+      if (songs is List && songs.isNotEmpty) {
+        for (final item in songs) {
+          if (item is MediaItem) {
+            _resolvedOnlineItems[song.id] = item;
+            return item;
+          }
+        }
+      }
+
+      if (artist.isNotEmpty) {
+        final fallbackRes =
+            await _musicServices.search(song.title, filter: 'songs');
+        final fbSongs = fallbackRes['Songs'] ??
+            fallbackRes['songs'] ??
+            fallbackRes['Top result'];
+        if (fbSongs is List && fbSongs.isNotEmpty) {
+          for (final item in fbSongs) {
+            if (item is MediaItem) {
+              _resolvedOnlineItems[song.id] = item;
+              return item;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      printERROR('resolveOnlineSong error for ${song.title}: $e');
+    }
+    return null;
+  }
+
+  /// Play a local audio file. Sets the queue to the full localSongs list and
+  /// plays starting at [index]. Local files do not use the YouTube stream fetcher.
   Future<void> playLocalSong(MediaItem song, List<MediaItem> allSongs) async {
     isRadioModeOn = false;
     playinfrom.value =
@@ -525,11 +581,30 @@ class PlayerController extends GetxController
     await _audioHandler.updateQueue(allSongs);
     await _audioHandler.customAction(
         'playLocalFile', {'index': index < 0 ? 0 : index, 'song': song});
+    resolveOnlineSong(song).ignore();
   }
 
   Future<void> startRadio(MediaItem? mediaItem, {String? playlistid}) async {
-    radioInitiatorItem = mediaItem ?? playlistid;
-    await pushSongToQueue(mediaItem, playlistid: playlistid, radio: true);
+    MediaItem? targetItem = mediaItem;
+    if (targetItem != null && targetItem.id.startsWith('local_')) {
+      final resolved = await resolveOnlineSong(targetItem);
+      if (resolved != null) {
+        targetItem = resolved;
+      } else {
+        if (Get.context != null) {
+          ScaffoldMessenger.of(Get.context!).showSnackBar(
+            snackbar(
+              Get.context!,
+              "Could not find an online match on YouTube Music for '${targetItem.title}'",
+              size: SanckBarSize.MEDIUM,
+            ),
+          );
+        }
+        return;
+      }
+    }
+    radioInitiatorItem = targetItem ?? playlistid;
+    await pushSongToQueue(targetItem, playlistid: playlistid, radio: true);
   }
 
   Future<void> _addRadioContinuation(dynamic item) async {
