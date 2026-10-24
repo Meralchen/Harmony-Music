@@ -55,7 +55,7 @@ jobs:
           set -euo pipefail
 
           if [[ "$IS_FORK_PR" != "true" &&
-                "$GITHUB_REPOSITORY" == "Meralchen/Harmony-Music" &&
+                "$GITHUB_REPOSITORY" == "NPP-exe/Harmony-Music" &&
                 -n "$KEYSTORE_BASE64" &&
                 -n "$KEY_STORE_PASSWORD" &&
                 -n "$KEY_PASSWORD" ]]; then
@@ -125,7 +125,7 @@ jobs:
       - name: Upload Universal APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: harmonymusic-universal-apk-${{ steps.keystore.outputs.signing_mode }}
+          name: harmonymusic-universal-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
       - name: Upload All Release APKs
