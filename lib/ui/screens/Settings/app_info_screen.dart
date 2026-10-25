@@ -28,17 +28,17 @@ Widget frostedGlassCard({
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Colors.white.withOpacity(0.09),
-              Colors.white.withOpacity(0.02),
+              Colors.white.withValues(alpha: 0.09),
+              Colors.white.withValues(alpha: 0.02),
             ],
           ),
           border: Border.all(
-            color: Colors.white.withOpacity(0.18),
+            color: Colors.white.withValues(alpha: 0.18),
             width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.4),
+              color: Colors.black.withValues(alpha: 0.4),
               blurRadius: 28,
               offset: const Offset(0, 10),
             ),
@@ -178,7 +178,7 @@ class AppInfoContent extends StatelessWidget {
                 () => Text(
                   "Harmony Music ${settingsController.formattedVersion} • $appGithubUser",
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.4),
+                    color: Colors.white.withValues(alpha: 0.4),
                     fontSize: 12,
                     letterSpacing: 0.6,
                   ),
@@ -204,7 +204,7 @@ class AppInfoContent extends StatelessWidget {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF00E5FF).withOpacity(0.45),
+                color: const Color(0xFF00E5FF).withValues(alpha: 0.45),
                 blurRadius: 36,
                 spreadRadius: 4,
               ),
@@ -235,15 +235,15 @@ class AppInfoContent extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3.5),
           decoration: BoxDecoration(
-            color: const Color(0xFF00E5FF).withOpacity(0.12),
+            color: const Color(0xFF00E5FF).withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: const Color(0xFF00E5FF).withOpacity(0.55),
+              color: const Color(0xFF00E5FF).withValues(alpha: 0.55),
               width: 1.0,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF00E5FF).withOpacity(0.2),
+                color: const Color(0xFF00E5FF).withValues(alpha: 0.2),
                 blurRadius: 10,
                 spreadRadius: 0,
               ),
@@ -328,10 +328,10 @@ class AppInfoContent extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(7),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF00E5FF).withOpacity(0.14),
+                  color: const Color(0xFF00E5FF).withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: const Color(0xFF00E5FF).withOpacity(0.35),
+                    color: const Color(0xFF00E5FF).withValues(alpha: 0.35),
                     width: 1,
                   ),
                 ),
@@ -535,10 +535,10 @@ class AppInfoContent extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(9),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.08),
+                  color: Colors.white.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.14),
+                    color: Colors.white.withValues(alpha: 0.14),
                     width: 1,
                   ),
                 ),
@@ -568,7 +568,7 @@ class AppInfoContent extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.55),
+                        color: Colors.white.withValues(alpha: 0.55),
                         fontSize: 11.5,
                       ),
                     ),
@@ -578,7 +578,7 @@ class AppInfoContent extends StatelessWidget {
               Icon(
                 Icons.open_in_new_rounded,
                 size: 18,
-                color: Colors.white.withOpacity(0.4),
+                color: Colors.white.withValues(alpha: 0.4),
               ),
             ],
           ),
@@ -620,10 +620,10 @@ class AppInfoContent extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(9),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withOpacity(0.18),
+                  color: const Color(0xFF10B981).withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: const Color(0xFF10B981).withOpacity(0.35),
+                    color: const Color(0xFF10B981).withValues(alpha: 0.35),
                     width: 1,
                   ),
                 ),
@@ -658,7 +658,7 @@ class AppInfoContent extends StatelessWidget {
                         style: TextStyle(
                           color: settingsController.isNewVersionAvailable.value
                               ? Colors.amber[300]
-                              : Colors.white.withOpacity(0.55),
+                              : Colors.white.withValues(alpha: 0.55),
                           fontSize: 11.5,
                         ),
                       ),
@@ -669,7 +669,7 @@ class AppInfoContent extends StatelessWidget {
               Icon(
                 Icons.auto_awesome,
                 size: 18,
-                color: const Color(0xFF00E5FF).withOpacity(0.7),
+                color: const Color(0xFF00E5FF).withValues(alpha: 0.7),
               ),
             ],
           ),
@@ -683,15 +683,15 @@ class AppInfoContent extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 2.5),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: color.withOpacity(0.65),
+          color: color.withValues(alpha: 0.65),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.25),
+            color: color.withValues(alpha: 0.25),
             blurRadius: 8,
             spreadRadius: 0,
           ),
@@ -729,7 +729,7 @@ class AppInfoContent extends StatelessWidget {
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.9),
+            color: color.withValues(alpha: 0.9),
             shape: BoxShape.circle,
             border: Border.all(
               color: const Color(0xFF0E1724),
@@ -737,7 +737,7 @@ class AppInfoContent extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.35),
+                color: Colors.black.withValues(alpha: 0.35),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
