@@ -1,9 +1,7 @@
-import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:harmonymusic/utils/helper.dart';
 import 'package:harmonymusic/utils/lang_mapping.dart';
-import 'package:ionicons/ionicons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../utils/app_constants.dart';
@@ -11,7 +9,6 @@ import '../../widgets/common_dialog_widget.dart';
 import '../../widgets/cust_switch.dart';
 import '../../widgets/export_file_dialog.dart';
 import '../../widgets/backup_dialog.dart';
-import '../../widgets/new_version_dialog.dart';
 import '../../widgets/restore_dialog.dart';
 import '../Library/library_controller.dart';
 import '../../widgets/snackbar.dart';

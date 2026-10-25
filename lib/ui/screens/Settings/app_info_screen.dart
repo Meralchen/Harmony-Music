@@ -268,38 +268,45 @@ class AppInfoContent extends StatelessWidget {
   /// 2. Developer Hero Card (Large & Balanced)
   Widget _buildDeveloperHeroCard(
       BuildContext context, BoxConstraints constraints) {
-    final cardHeight = constraints.maxWidth < 420 ? 130.0 : 155.0;
+    final isMobile = constraints.maxWidth < 500;
+    final cardHeight = isMobile ? 145.0 : 175.0;
+    final horizontalPad = isMobile ? 18.0 : 28.0;
+    final verticalPad = isMobile ? 14.0 : 16.0;
+
     return frostedGlassCard(
       height: cardHeight,
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: horizontalPad,
+        vertical: verticalPad,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // LEFT: "Maintained by NPP" (Slicey Heallow Regular brush script)
-          Flexible(
-            flex: 5,
+          Expanded(
+            flex: 6,
             child: Container(
               alignment: Alignment.centerLeft,
               child: Image.asset(
                 'assets/images/branding_maintained_by_npp.png',
-                height: 55,
+                height: isMobile ? 60.0 : 75.0,
                 fit: BoxFit.contain,
                 color: Colors.white,
               ),
             ),
           ),
 
-          const SizedBox(width: 12),
+          SizedBox(width: isMobile ? 10.0 : 18.0),
 
           // RIGHT: "Narayan" signature with multi-layer cyan neon glow
-          Flexible(
+          Expanded(
             flex: 5,
             child: Container(
               alignment: Alignment.centerRight,
               child: Image.asset(
                 'assets/images/branding_signature_cyan_glow.png',
-                height: 70,
+                height: isMobile ? 95.0 : 130.0,
                 fit: BoxFit.contain,
               ),
             ),
@@ -420,8 +427,8 @@ class AppInfoContent extends StatelessWidget {
           const SizedBox(height: 10),
 
           // Bullet 3: "• Community Contributors & Beta Testers"
-          Row(
-            children: const [
+          const Row(
+            children: [
               Text(
                 "• ",
                 style: TextStyle(
