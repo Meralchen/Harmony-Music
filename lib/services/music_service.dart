@@ -8,9 +8,9 @@ import 'package:get/get.dart' as getx;
 import 'package:hive/hive.dart';
 
 import '/models/album.dart';
+import 'invidious_service.dart';
 import '/services/utils.dart';
 import '../utils/helper.dart';
-import '../utils/web_cors_proxy.dart';
 import 'constant.dart';
 import 'continuations.dart';
 import 'nav_parser.dart';
@@ -18,6 +18,7 @@ import 'nav_parser.dart';
 enum AudioQuality { Low, High }
 
 class MusicServices extends getx.GetxService {
+  InvidiousService get _invidious => getx.Get.find<InvidiousService>();
   final Map<String, String> _headers = {
     'accept': '*/*',
     'content-type': 'application/json',
@@ -46,7 +47,7 @@ class MusicServices extends getx.GetxService {
     super.onInit();
   }
 
-  final dio = createWebAwareDio();
+  final dio = Dio();
 
   Future<void> init() async {
     //check visitor id in data base, if not generate one , set lang code
@@ -60,6 +61,7 @@ class MusicServices extends getx.GetxService {
 
     final appPrefsBox = Hive.box('AppPrefs');
     hlCode = appPrefsBox.get('contentLanguage') ?? "en";
+    if (getx.GetPlatform.isWeb) return;
     if (appPrefsBox.containsKey('visitorId')) {
       final visitorData = appPrefsBox.get("visitorId");
       if (visitorData != null && !isExpired(epoch: visitorData['exp'])) {
@@ -116,6 +118,11 @@ class MusicServices extends getx.GetxService {
     Map<dynamic, dynamic> data, {
     additionalParams = "",
   }) async {
+    if (getx.GetPlatform.isWeb) {
+      throw UnsupportedError(
+        'YouTube Music requests are not available in the browser; use Invidious.',
+      );
+    }
     //print("$baseUrl$action$fixedParms$additionalParams          data:$data");
     try {
       final response = await dio.post(
@@ -137,6 +144,14 @@ class MusicServices extends getx.GetxService {
 
   // Future<List<Map<String, dynamic>>>
   Future<dynamic> getHome({int limit = 4}) async {
+    if (getx.GetPlatform.isWeb) {
+      final videos = InvidiousService.mediaItems(
+        await _invidious.trending(type: 'Music'),
+      );
+      return [
+        {'title': 'Trending', 'contents': videos.take(limit * 8).toList()},
+      ];
+    }
     final data = Map.from(_context);
     data["browseId"] = "FEmusic_home";
     final response = await _sendRequest("browse", data);
@@ -177,6 +192,18 @@ class MusicServices extends getx.GetxService {
     String catogory, {
     String? countryCode,
   }) async {
+    if (getx.GetPlatform.isWeb) {
+      final isMusicVideos = catogory == 'TMV';
+      final videos = InvidiousService.mediaItems(
+        await _invidious.trending(type: 'Music'),
+      );
+      return [
+        {
+          'title': isMusicVideos ? 'Top Music Videos' : 'Trending',
+          'contents': videos,
+        },
+      ];
+    }
     final List<Map<String, dynamic>> charts = [];
     final data = Map.from(_context);
 
@@ -237,6 +264,64 @@ class MusicServices extends getx.GetxService {
     String? additionalParamsNext,
     bool onlyRelated = false,
   }) async {
+    if (getx.GetPlatform.isWeb) {
+      if (videoId.startsWith('MPED')) {
+        videoId = videoId.substring(4);
+      }
+      if (onlyRelated) {
+        return {
+          'tracks': <MediaItem>[],
+          'lyrics': null,
+          'related': null,
+          'additionalParamsForNext': null,
+        };
+      }
+      if (videoId.isEmpty && playlistId == null) {
+        throw ArgumentError(
+          'Provide a video ID or playlist ID for Invidious playback.',
+        );
+      }
+
+      late List<MediaItem> tracks;
+      if (playlistId != null) {
+        final playlist = await _invidious.playlist(playlistId);
+        tracks = InvidiousService.mediaItems(
+          playlist['videos'] as List? ?? const [],
+        );
+        if (videoId.isNotEmpty) {
+          final selectedIndex = tracks.indexWhere((item) => item.id == videoId);
+          if (selectedIndex > 0) {
+            tracks = [
+              ...tracks.skip(selectedIndex),
+              ...tracks.take(selectedIndex),
+            ];
+          } else if (selectedIndex < 0) {
+            final selected = await _invidious.video(videoId);
+            final selectedItem = InvidiousService.mediaItem(selected);
+            if (selectedItem != null) tracks.insert(0, selectedItem);
+          }
+        }
+      } else {
+        final video = await _invidious.video(videoId);
+        final current = InvidiousService.mediaItem(video);
+        tracks = [
+          if (current != null) current,
+          ...InvidiousService.mediaItems(
+            (video['recommendedVideos'] as List? ?? const []).where(
+              (item) => item is Map && item['videoId'] != videoId,
+            ),
+          ),
+        ];
+      }
+
+      return {
+        'tracks': tracks.take(limit).toList(),
+        'playlistId': playlistId,
+        'lyrics': null,
+        'related': null,
+        'additionalParamsForNext': null,
+      };
+    }
     if (videoId.isNotEmpty && videoId.substring(0, 4) == "MPED") {
       videoId = videoId.substring(4);
     }
@@ -362,6 +447,9 @@ class MusicServices extends getx.GetxService {
   }
 
   Future<String> getAlbumBrowseId(String audioPlaylistId) async {
+    if (getx.GetPlatform.isWeb) {
+      throw UnsupportedError('Invidious does not provide YouTube Music albums.');
+    }
     final response = await dio.get(
       "${domain}playlist",
       options: Options(headers: _headers),
@@ -378,6 +466,19 @@ class MusicServices extends getx.GetxService {
   }
 
   dynamic getContentRelatedToSong(String videoId, String hlCode) async {
+    if (getx.GetPlatform.isWeb) {
+      final video = await _invidious.video(videoId);
+      return [
+        {
+          'title': 'Similar videos',
+          'contents': InvidiousService.mediaItems(
+            (video['recommendedVideos'] as List? ?? const []).where(
+              (item) => item is Map && item['videoId'] != videoId,
+            ),
+          ),
+        },
+      ];
+    }
     final params = await getWatchPlaylist(videoId: videoId, onlyRelated: true);
     final data = Map.from(_context);
     data['browseId'] = params['related'];
@@ -389,6 +490,7 @@ class MusicServices extends getx.GetxService {
   }
 
   dynamic getLyrics(String browseId) async {
+    if (getx.GetPlatform.isWeb) return null;
     final data = Map.from(_context);
     data['browseId'] = browseId;
     final response = (await _sendRequest('browse', data)).data;
@@ -547,6 +649,26 @@ class MusicServices extends getx.GetxService {
     bool related = false,
     int suggestionsLimit = 0,
   }) async {
+    if (getx.GetPlatform.isWeb) {
+      if (playlistId == null) {
+        throw UnsupportedError(
+          'Invidious cannot open YouTube Music album browse IDs.',
+        );
+      }
+      final data = await _invidious.playlist(playlistId);
+      return {
+        'playlistId': data['playlistId'] ?? playlistId,
+        'title': data['title'] ?? 'Playlist',
+        'description': data['description'] ?? '',
+        'itemCount': data['videoCount']?.toString() ?? '',
+        'thumbnails': [
+          {'url': data['playlistThumbnail'] ?? ''},
+        ],
+        'tracks': InvidiousService.mediaItems(
+          data['videos'] as List? ?? const [],
+        ),
+      };
+    }
     String browseId = playlistId != null
         ? (playlistId.startsWith("VL") ? playlistId : "VL$playlistId")
         : albumId!;
@@ -715,6 +837,9 @@ class MusicServices extends getx.GetxService {
   }
 
   Future<List<String>> getSearchSuggestion(String queryStr) async {
+    if (getx.GetPlatform.isWeb) {
+      return _invidious.suggestions(queryStr);
+    }
     final data = Map.from(_context);
     data['input'] = queryStr;
     final res =
@@ -740,6 +865,10 @@ class MusicServices extends getx.GetxService {
 
   ///Specially created for deep-links
   Future<List> getSongWithId(String songId) async {
+    if (getx.GetPlatform.isWeb) {
+      final list = await getWatchPlaylist(videoId: songId);
+      return [true, list['tracks']];
+    }
     final data = Map.of(_context);
     data['videoId'] = songId;
     final response = (await _sendRequest("player", data)).data;
@@ -764,6 +893,81 @@ class MusicServices extends getx.GetxService {
     bool ignoreSpelling = false,
     String? filterParams,
   }) async {
+    if (getx.GetPlatform.isWeb) {
+      final type = switch (filter) {
+        'artists' => 'channel',
+        'playlists' || 'community_playlists' || 'featured_playlists' =>
+          'playlist',
+        'albums' => null,
+        _ => 'video',
+      };
+      final searchResults = <String, dynamic>{};
+      if (filter == null) {
+        final videos = InvidiousService.mediaItems(
+          await _invidious.search(query, type: 'video'),
+        );
+        final playlists = (await _invidious.search(query, type: 'playlist'))
+            .whereType<Map>()
+            .map((item) => InvidiousService.playlistFromJson(item))
+            .toList();
+        final artists = (await _invidious.search(query, type: 'channel'))
+            .whereType<Map>()
+            .map((item) => InvidiousService.artistFromJson(item))
+            .toList();
+        searchResults.addAll({
+          'searchEndpoint': {
+            'Songs': 'video',
+            'Videos': 'video',
+            'Featured playlists': 'playlist',
+            'Community playlists': 'playlist',
+            'Artists': 'channel',
+          },
+          'Songs': videos,
+          'Videos': videos,
+          'Featured playlists': playlists,
+          'Community playlists': playlists,
+          'Artists': artists,
+        });
+        return searchResults;
+      }
+
+      final category = switch (filter) {
+        'artists' => 'Artists',
+        'playlists' => 'Playlists',
+        'community_playlists' => 'Community playlists',
+        'featured_playlists' => 'Featured playlists',
+        'albums' => 'Albums',
+        'videos' => 'Videos',
+        _ => 'Songs',
+      };
+      dynamic items;
+      if (type == 'video') {
+        items = InvidiousService.mediaItems(
+          await _invidious.search(query, type: type),
+        );
+      } else if (type == 'playlist') {
+        items = (await _invidious.search(query, type: type))
+            .whereType<Map>()
+            .map((item) => InvidiousService.playlistFromJson(item))
+            .toList();
+      } else if (type == 'channel') {
+        items = (await _invidious.search(query, type: type))
+            .whereType<Map>()
+            .map((item) => InvidiousService.artistFromJson(item))
+            .toList();
+      } else {
+        items = <dynamic>[];
+      }
+
+      searchResults[category] = items;
+      searchResults['params'] = {
+        'data': query,
+        'type': type,
+        'category': category,
+        'additionalParams': '&ctoken=null&continuation=null',
+      };
+      return searchResults;
+    }
     final data = Map.of(_context);
     data['context']['client']["hl"] = 'en';
     data['query'] = query;
@@ -987,6 +1191,16 @@ class MusicServices extends getx.GetxService {
     Map additionalParamsNext, {
     int limit = 10,
   }) async {
+    if (getx.GetPlatform.isWeb) {
+      final category = additionalParamsNext['category'] as String?;
+      return {
+        if (category != null) category: <dynamic>[],
+        'params': {
+          ...additionalParamsNext,
+          'additionalParams': '&ctoken=null&continuation=null',
+        },
+      };
+    }
     final data = additionalParamsNext['data'];
     final type = additionalParamsNext['type'];
     final category = additionalParamsNext['category'];
@@ -1028,6 +1242,33 @@ class MusicServices extends getx.GetxService {
   }
 
   Future<Map<String, dynamic>> getArtist(String channelId) async {
+    if (getx.GetPlatform.isWeb) {
+      final channel = await _invidious.channel(channelId);
+      final videos = InvidiousService.mediaItems(
+        await _invidious.channelVideos(channelId),
+      );
+      final artist = InvidiousService.artistFromJson(channel);
+      final thumbnails = channel['authorThumbnails'] as List? ?? const [];
+      final thumbnail = thumbnails.isNotEmpty
+          ? (thumbnails.last as Map)['url'] as String? ?? ''
+          : '';
+      return {
+        'name': artist.name,
+        'description': channel['description'] ?? '',
+        'views': channel['viewCount']?.toString(),
+        'channelId': channelId,
+        'shuffleId': null,
+        'radioId': null,
+        'subscribers': artist.subscribers ?? '',
+        'thumbnails': [
+          {'url': thumbnail},
+        ],
+        'Top songs': {'content': videos},
+        'Videos': {'content': videos},
+        'Albums': {'content': <dynamic>[]},
+        'Singles & EPs': {'content': <dynamic>[]},
+      };
+    }
     if (channelId.startsWith("MPLA")) {
       channelId = channelId.substring(4);
     }
@@ -1081,6 +1322,24 @@ class MusicServices extends getx.GetxService {
     String category, {
     String additionalParams = "",
   }) async {
+    if (getx.GetPlatform.isWeb) {
+      final channelId = browseEndpoint['browseId']?.toString();
+      if (channelId == null || channelId.isEmpty) {
+        return {
+          'results': <dynamic>[],
+          'additionalParams': '&ctoken=null&continuation=null',
+        };
+      }
+      final results = category == 'Songs' || category == 'Videos'
+          ? InvidiousService.mediaItems(
+              await _invidious.channelVideos(channelId),
+            )
+          : <dynamic>[];
+      return {
+        'results': results,
+        'additionalParams': '&ctoken=null&continuation=null',
+      };
+    }
     final Map<String, dynamic> result = {"results": []};
     final data = Map.of(_context);
     browseEndpoint.remove("content");
@@ -1191,6 +1450,7 @@ class MusicServices extends getx.GetxService {
   }
 
   Future<String?> getSongYear(String songId) async {
+    if (getx.GetPlatform.isWeb) return null;
     final data = Map.from(_context);
     data['browseId'] = "MPTC$songId";
     try {
