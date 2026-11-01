@@ -6,7 +6,8 @@ const webCorsProxyBaseUrl = 'https://cors-anywhere-py9w.onrender.com/';
 Uri withWebCorsProxy(Uri uri, {bool? isWeb}) {
   if (!(isWeb ?? kIsWeb) ||
       (uri.scheme != 'http' && uri.scheme != 'https') ||
-      uri.host == Uri.parse(webCorsProxyBaseUrl).host) {
+      uri.host == Uri.parse(webCorsProxyBaseUrl).host ||
+      uri.host == 'api.github.com') {
     return uri;
   }
 

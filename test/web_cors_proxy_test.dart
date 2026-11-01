@@ -24,5 +24,12 @@ void main() {
       final uri = Uri.parse(webCorsProxyBaseUrl);
       expect(withWebCorsProxy(uri, isWeb: true), uri);
     });
+
+    test('does not proxy the GitHub API', () {
+      final uri = Uri.parse(
+        'https://api.github.com/repos/NPP-exe/Harmony-Music/releases/latest',
+      );
+      expect(withWebCorsProxy(uri, isWeb: true), uri);
+    });
   });
 }
