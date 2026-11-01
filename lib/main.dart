@@ -49,7 +49,9 @@ Future<void> _startApplication() async {
   startApplicationServices();
   Get.put<AudioHandler>(await initAudioService(), permanent: true);
   WidgetsBinding.instance.addObserver(LifecycleHandler());
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  if (!GetPlatform.isWeb) {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  }
   if (!GetPlatform.isWeb) {
     TerminateRestart.instance.initialize();
   }
@@ -65,7 +67,9 @@ class MyApp extends StatelessWidget {
     if (!GetPlatform.isDesktop && !GetPlatform.isWeb) {
       Get.put(AppLinksController());
     }
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    if (!GetPlatform.isWeb) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    }
     return GetMaterialApp(
       title: 'Harmony Music',
       home: const Home(),
@@ -188,7 +192,9 @@ class LifecycleHandler extends WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      if (!GetPlatform.isWeb) {
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      }
     } else if (state == AppLifecycleState.detached) {
       await Get.find<AudioHandler>().customAction("saveSession");
     }
