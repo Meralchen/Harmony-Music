@@ -145,7 +145,9 @@ class MusicServices extends getx.GetxService {
   // Future<List<Map<String, dynamic>>>
   Future<dynamic> getHome({int limit = 4}) async {
     if (getx.GetPlatform.isWeb) {
-      final videos = await _getWebMusicTrends(limit: limit * 8);
+      final videos = InvidiousService.mediaItems(
+        await _invidious.trending(type: 'Music'),
+      );
       return [
         {'title': 'Trending', 'contents': videos.take(limit * 8).toList()},
       ];
@@ -193,7 +195,9 @@ class MusicServices extends getx.GetxService {
   }) async {
     if (getx.GetPlatform.isWeb) {
       final isMusicVideos = catogory == 'TMV';
-      final videos = await _getWebMusicTrends();
+      final videos = InvidiousService.mediaItems(
+        await _invidious.trending(type: 'Music'),
+      );
       return [
         {
           'title': isMusicVideos ? 'Top Music Videos' : 'Trending',
@@ -471,8 +475,7 @@ class MusicServices extends getx.GetxService {
 
   Future<String> getAlbumBrowseId(String audioPlaylistId) async {
     if (getx.GetPlatform.isWeb) {
-      throw UnsupportedError(
-          'Invidious does not provide YouTube Music albums.');
+      throw UnsupportedError('Invidious does not provide YouTube Music albums.');
     }
     final response = await dio.get(
       "${domain}playlist",
@@ -916,9 +919,7 @@ class MusicServices extends getx.GetxService {
     if (getx.GetPlatform.isWeb) {
       final type = switch (filter) {
         'artists' => 'channel',
-        'playlists' ||
-        'community_playlists' ||
-        'featured_playlists' =>
+        'playlists' || 'community_playlists' || 'featured_playlists' =>
           'playlist',
         'albums' => null,
         _ => 'video',

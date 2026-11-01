@@ -143,22 +143,6 @@ class InvidiousService extends GetxService {
         .toList();
   }
 
-  static List<MediaItem> musicTrendItems(Iterable<dynamic> videos) {
-    final seenIds = <String>{};
-    return videos
-        .whereType<Map>()
-        .where((video) {
-          final lengthSeconds = _asInt(video['lengthSeconds']) ?? 0;
-          return video['type'] == 'video' &&
-              video['liveNow'] != true &&
-              lengthSeconds > 0;
-        })
-        .map(mediaItem)
-        .whereType<MediaItem>()
-        .where((item) => seenIds.add(item.id))
-        .toList();
-  }
-
   static String resolveMediaUrl(String url, Uri instanceUri) {
     final uri = Uri.parse(url);
     return uri.hasScheme ? url : instanceUri.resolveUri(uri).toString();
