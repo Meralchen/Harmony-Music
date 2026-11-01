@@ -369,11 +369,14 @@ class YoutubeHttpClient extends http.BaseClient {
       _logger.finer('Request body: ${request.body}');
     }
 
-    if (_proxyUrl != null && request.url.host != _proxyUrl.host) {
+    final requestUrl = request.url;
+    if (_proxyUrl != null &&
+        requestUrl != null &&
+        requestUrl.host != _proxyUrl.host) {
       final proxyBase = _proxyUrl.toString().replaceFirst(RegExp(r'/+$'), '');
       final proxiedRequest = http.StreamedRequest(
         request.method,
-        Uri.parse('$proxyBase/${request.url}'),
+        Uri.parse('$proxyBase/$requestUrl'),
       )
         ..contentLength = request.contentLength
         ..followRedirects = request.followRedirects
