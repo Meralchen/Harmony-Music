@@ -943,15 +943,15 @@ class MusicServices extends getx.GetxService {
       dynamic items;
       if (type == 'video') {
         items = InvidiousService.mediaItems(
-          await _invidious.search(query, type: type),
+          await _invidious.search(query, type: 'video'),
         );
       } else if (type == 'playlist') {
-        items = (await _invidious.search(query, type: type))
+        items = (await _invidious.search(query, type: 'playlist'))
             .whereType<Map>()
             .map((item) => InvidiousService.playlistFromJson(item))
             .toList();
       } else if (type == 'channel') {
-        items = (await _invidious.search(query, type: type))
+        items = (await _invidious.search(query, type: 'channel'))
             .whereType<Map>()
             .map((item) => InvidiousService.artistFromJson(item))
             .toList();
