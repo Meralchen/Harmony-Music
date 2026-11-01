@@ -148,6 +148,13 @@ class InvidiousService extends GetxService {
     return uri.hasScheme ? url : instanceUri.resolveUri(uri).toString();
   }
 
+  String resolveMediaUrlForActiveInstance(String url) {
+    return resolveMediaUrl(
+      url,
+      Uri.parse(_activeInstance ?? officialInstances.first),
+    );
+  }
+
   static dynamic _resolveRelativeMediaUrls(dynamic value, Uri instanceUri) {
     if (value is List) {
       return value

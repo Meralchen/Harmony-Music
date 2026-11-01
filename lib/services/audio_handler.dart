@@ -1048,6 +1048,13 @@ class MyAudioHandler extends BaseAudioHandler with GetxServiceMixin {
       //in case file doesnot found in storage, song will be played online
       return checkNGetUrl(songId, offlineReplacementUrl: true);
     } else {
+      if (GetPlatform.isWeb) {
+        final videoId =
+            songId.startsWith('MPED') ? songId.substring(4) : songId;
+        final stream = await StreamProvider.fetch(videoId);
+        return HMStreamingData.fromJson(stream.hmStreamingData);
+      }
+
       //check if song stream url is cached and allocate url accordingly
       final songsUrlCacheBox = Hive.box("SongsUrlCache");
       final qualityIndex = Hive.box('AppPrefs').get('streamingQuality') ?? 1;
