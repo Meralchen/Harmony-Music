@@ -15,6 +15,7 @@ import 'hls_manifest.dart';
 /// HttpClient wrapper for YouTube
 class YoutubeHttpClient extends http.BaseClient {
   final http.Client _httpClient;
+  final Uri? _proxyUrl;
   static final _logger = Logger('YoutubeExplode.HttpClient');
 
   // Flag to interrupt receiving stream.
@@ -35,8 +36,9 @@ class YoutubeHttpClient extends http.BaseClient {
   Map<String, String> get headers => defaultHeaders;
 
   /// Initialize an instance of [YoutubeHttpClient]
-  YoutubeHttpClient([http.Client? httpClient])
-      : _httpClient = httpClient ?? http.Client();
+  YoutubeHttpClient([http.Client? httpClient, Uri? proxyUrl])
+      : _httpClient = httpClient ?? http.Client(),
+        _proxyUrl = proxyUrl;
 
   /// Throws if something is wrong with the response.
   void _validateResponse(http.BaseResponse response, int statusCode) {
@@ -366,6 +368,24 @@ class YoutubeHttpClient extends http.BaseClient {
     if (request is http.Request) {
       _logger.finer('Request body: ${request.body}');
     }
+
+    if (_proxyUrl != null && request.url.host != _proxyUrl.host) {
+      final proxyBase = _proxyUrl.toString().replaceFirst(RegExp(r'/+$'), '');
+      final proxiedRequest = http.StreamedRequest(
+        request.method,
+        Uri.parse('$proxyBase/${request.url}'),
+      )
+        ..contentLength = request.contentLength
+        ..followRedirects = request.followRedirects
+        ..maxRedirects = request.maxRedirects
+        ..persistentConnection = request.persistentConnection
+        ..headers.addAll(request.headers);
+
+      final response = _httpClient.send(proxiedRequest);
+      await request.finalize().pipe(proxiedRequest.sink);
+      return response;
+    }
+
     return _httpClient.send(request);
   }
 }

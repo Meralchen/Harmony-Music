@@ -10,6 +10,7 @@ import 'package:hive/hive.dart';
 import '/models/album.dart';
 import '/services/utils.dart';
 import '../utils/helper.dart';
+import '../utils/web_cors_proxy.dart';
 import 'constant.dart';
 import 'continuations.dart';
 import 'nav_parser.dart';
@@ -45,7 +46,7 @@ class MusicServices extends getx.GetxService {
     super.onInit();
   }
 
-  final dio = Dio();
+  final dio = createWebAwareDio();
 
   Future<void> init() async {
     //check visitor id in data base, if not generate one , set lang code

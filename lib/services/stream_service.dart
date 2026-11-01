@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
+import '../utils/web_cors_proxy.dart';
+
 class StreamProvider {
   final bool playable;
   final List<Audio>? audioFormats;
@@ -14,7 +16,11 @@ class StreamProvider {
   });
 
   static Future<StreamProvider> fetch(String videoId) async {
-    final yt = YoutubeExplode();
+    final yt = YoutubeExplode(
+      httpClient: kIsWeb
+          ? YoutubeHttpClient(null, Uri.parse(webCorsProxyBaseUrl))
+          : null,
+    );
 
     try {
       // Explicitly specify clients in priority order so we don't depend on
@@ -43,7 +49,7 @@ class StreamProvider {
                 bitrate: e.bitrate.bitsPerSecond,
                 duration: e.duration ?? 0,
                 loudnessDb: e.loudnessDb,
-                url: e.url.toString(),
+                url: withWebCorsProxy(e.url).toString(),
                 size: e.size.totalBytes,
               ),
             )
