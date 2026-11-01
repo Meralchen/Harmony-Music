@@ -449,7 +449,26 @@ class MyAudioHandler extends BaseAudioHandler with GetxServiceMixin {
     //   await _player.play();
     //   return;
     // }
-    await _player.play();
+    await _playPlayer();
+  }
+
+  Future<void> _playPlayer() async {
+    try {
+      await _player.play();
+    } catch (error, stackTrace) {
+      if (!GetPlatform.isWeb) {
+        Error.throwWithStackTrace(error, stackTrace);
+      }
+
+      printERROR('[Web playback] Could not start audio: $error');
+      await _player.pause();
+      isSongLoading = false;
+      if (Get.isRegistered<PlayerController>()) {
+        Get.find<PlayerController>().notifyPlayError(
+          'The browser could not start audio. Press Play to try again.',
+        );
+      }
+    }
   }
 
   @override
@@ -588,7 +607,7 @@ class MyAudioHandler extends BaseAudioHandler with GetxServiceMixin {
             playbackState.value.copyWith(queueIndex: currentIndex),
           );
           isSongLoading = false;
-          await _player.play();
+          await _playPlayer();
           break;
         }
         final futureStreamInfo = checkNGetUrl(
@@ -643,7 +662,7 @@ class MyAudioHandler extends BaseAudioHandler with GetxServiceMixin {
             await _player.seek(Duration(milliseconds: position));
           }
         } else {
-          await _player.play();
+          await _playPlayer();
         }
         break;
 
@@ -670,7 +689,7 @@ class MyAudioHandler extends BaseAudioHandler with GetxServiceMixin {
         );
         await _initializeWebPlaylist();
         isSongLoading = false;
-        await _player.play();
+        await _playPlayer();
         break;
 
       case 'checkWithCacheDb':
@@ -736,7 +755,7 @@ class MyAudioHandler extends BaseAudioHandler with GetxServiceMixin {
           _normalizeVolume(streamInfo.audio!.loudnessDb);
         }
 
-        await _player.play();
+        await _playPlayer();
         break;
 
       case 'toggleSkipSilence':

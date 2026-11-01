@@ -15,6 +15,7 @@ import '/services/audio_handler.dart';
 import '/services/music_service.dart';
 import '/services/invidious_service.dart';
 import '/ui/home.dart';
+import '/ui/web_experiment_consent_screen.dart';
 import '/ui/player/player_controller.dart';
 import 'ui/screens/Settings/settings_screen_controller.dart';
 import '/ui/utils/theme_controller.dart';
@@ -72,7 +73,10 @@ class MyApp extends StatelessWidget {
     }
     return GetMaterialApp(
       title: 'Harmony Music',
-      home: const Home(),
+      home: GetPlatform.isWeb &&
+              Hive.box("AppPrefs").get('webExperimentConsentVersion') != 1
+          ? const WebExperimentConsentScreen()
+          : const Home(),
       debugShowCheckedModeBanner: false,
       translations: Languages(),
       locale: Locale(

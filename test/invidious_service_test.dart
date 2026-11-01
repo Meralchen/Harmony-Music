@@ -39,4 +39,40 @@ void main() {
       );
     });
   });
+
+  group('InvidiousService.musicTrendItems', () {
+    test('filters live streams and items without a duration', () {
+      final items = InvidiousService.musicTrendItems([
+        {
+          'type': 'video',
+          'videoId': 'song-id',
+          'title': 'A music video',
+          'lengthSeconds': 180,
+          'liveNow': false,
+          'videoThumbnails': [],
+        },
+        {
+          'type': 'video',
+          'videoId': 'live-id',
+          'title': 'Live stream',
+          'lengthSeconds': 0,
+          'liveNow': true,
+        },
+        {
+          'type': 'video',
+          'videoId': 'unknown-length-id',
+          'title': 'Unknown length',
+          'lengthSeconds': 0,
+          'liveNow': false,
+        },
+        {
+          'type': 'channel',
+          'authorId': 'channel-id',
+          'author': 'Not a video',
+        },
+      ]);
+
+      expect(items.map((item) => item.id), ['song-id']);
+    });
+  });
 }
