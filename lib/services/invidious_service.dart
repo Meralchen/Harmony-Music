@@ -48,7 +48,7 @@ class InvidiousService extends GetxService {
           throw const FormatException('Unexpected Invidious API response');
         }
         _activeInstance = instance;
-        return data;
+        return _resolveRelativeMediaUrls(data, Uri.parse(instance));
       } on DioException catch (error) {
         lastError = error;
       } on FormatException catch (error) {
@@ -107,9 +107,8 @@ class InvidiousService extends GetxService {
     String playlistId, {
     int page = 1,
   }) async {
-    final normalizedId = playlistId.startsWith('VL')
-        ? playlistId.substring(2)
-        : playlistId;
+    final normalizedId =
+        playlistId.startsWith('VL') ? playlistId.substring(2) : playlistId;
     final result = await _get(
       'playlists/${Uri.encodeComponent(normalizedId)}',
       queryParameters: {'page': page},
@@ -118,9 +117,8 @@ class InvidiousService extends GetxService {
   }
 
   Future<Map<String, dynamic>> channel(String channelId) async {
-    final normalizedId = channelId.startsWith('MPLA')
-        ? channelId.substring(4)
-        : channelId;
+    final normalizedId =
+        channelId.startsWith('MPLA') ? channelId.substring(4) : channelId;
     final result = await _get(
       'channels/${Uri.encodeComponent(normalizedId)}',
     );
@@ -128,9 +126,8 @@ class InvidiousService extends GetxService {
   }
 
   Future<List<dynamic>> channelVideos(String channelId, {int page = 1}) async {
-    final normalizedId = channelId.startsWith('MPLA')
-        ? channelId.substring(4)
-        : channelId;
+    final normalizedId =
+        channelId.startsWith('MPLA') ? channelId.substring(4) : channelId;
     final result = await _get(
       'channels/${Uri.encodeComponent(normalizedId)}/videos',
       queryParameters: {'page': page},
@@ -144,6 +141,28 @@ class InvidiousService extends GetxService {
         .map((video) => mediaItem(video))
         .whereType<MediaItem>()
         .toList();
+  }
+
+  static String resolveMediaUrl(String url, Uri instanceUri) {
+    final uri = Uri.parse(url);
+    return uri.hasScheme ? url : instanceUri.resolveUri(uri).toString();
+  }
+
+  static dynamic _resolveRelativeMediaUrls(dynamic value, Uri instanceUri) {
+    if (value is List) {
+      return value
+          .map((item) => _resolveRelativeMediaUrls(item, instanceUri))
+          .toList();
+    }
+    if (value is Map) {
+      return value.map((key, item) {
+        if ((key == 'url' || key == 'playlistThumbnail') && item is String) {
+          return MapEntry(key, resolveMediaUrl(item, instanceUri));
+        }
+        return MapEntry(key, _resolveRelativeMediaUrls(item, instanceUri));
+      });
+    }
+    return value;
   }
 
   static MediaItem? mediaItem(Map video) {
