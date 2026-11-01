@@ -13,6 +13,7 @@ import '/services/piped_service.dart';
 import 'utils/app_link_controller.dart';
 import '/services/audio_handler.dart';
 import '/services/music_service.dart';
+import '/services/invidious_service.dart';
 import '/ui/home.dart';
 import '/ui/player/player_controller.dart';
 import 'ui/screens/Settings/settings_screen_controller.dart';
@@ -48,7 +49,9 @@ Future<void> _startApplication() async {
   startApplicationServices();
   Get.put<AudioHandler>(await initAudioService(), permanent: true);
   WidgetsBinding.instance.addObserver(LifecycleHandler());
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  if (!GetPlatform.isWeb) {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  }
   if (!GetPlatform.isWeb) {
     TerminateRestart.instance.initialize();
   }
@@ -64,7 +67,9 @@ class MyApp extends StatelessWidget {
     if (!GetPlatform.isDesktop && !GetPlatform.isWeb) {
       Get.put(AppLinksController());
     }
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    if (!GetPlatform.isWeb) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    }
     return GetMaterialApp(
       title: 'Harmony Music',
       home: const Home(),
@@ -113,6 +118,7 @@ class MyApp extends StatelessWidget {
 }
 
 Future<void> startApplicationServices() async {
+  Get.lazyPut(() => InvidiousService(), fenix: true);
   Get.lazyPut(() => PipedServices(), fenix: true);
   Get.lazyPut(() => MusicServices(), fenix: true);
   Get.lazyPut(() => ThemeController(), fenix: true);
@@ -186,7 +192,9 @@ class LifecycleHandler extends WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      if (!GetPlatform.isWeb) {
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      }
     } else if (state == AppLifecycleState.detached) {
       await Get.find<AudioHandler>().customAction("saveSession");
     }
